@@ -14,16 +14,12 @@ import { UsersPage } from '../pages/Users';
 export const router = createBrowserRouter([
   {
     path: '/',
-    element: <ErrorPage />,
+    element: <LoginPage />,
     errorElement: <ErrorPage />,
   },
   {
     path: 'assets',
     element: <AssetsPage />,
-  },
-  {
-    path: 'login',
-    element: <LoginPage />,
   },
   {
     path: 'dashboard',
