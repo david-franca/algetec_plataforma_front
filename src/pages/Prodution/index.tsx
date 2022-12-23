@@ -1,3 +1,4 @@
+import { nanoid } from '@reduxjs/toolkit';
 import { useMemo } from 'react';
 import { useParams } from 'react-router-dom';
 
@@ -53,6 +54,7 @@ export function ProductionPage() {
         >
           {demand.production.map((card) => (
             <Card
+              key={nanoid()}
               css={{
                 width: '100%',
               }}

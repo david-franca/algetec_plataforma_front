@@ -1,5 +1,5 @@
 import { api } from '../config/reducers/apiSlice';
-import { Demand, DemandCreate } from '../models/demands.model';
+import { Demand, DemandCreate, DemandUpdate } from '../models/demands.model';
 import { Experiment } from '../models/experiments.model';
 
 export const demandsApi = api.injectEndpoints({
@@ -20,7 +20,7 @@ export const demandsApi = api.injectEndpoints({
       }),
       invalidatesTags: ['Demands'],
     }),
-    updateDemand: build.mutation<Demand, Demand>({
+    updateDemand: build.mutation<Demand, DemandUpdate>({
       query: (body) => ({
         url: `demands/update/${body.id}`,
         method: 'PUT',
@@ -28,11 +28,10 @@ export const demandsApi = api.injectEndpoints({
       }),
       invalidatesTags: ['Demands'],
     }),
-    destroyDemand: build.mutation<Demand, Demand>({
-      query: (body) => ({
-        url: `demands/delete/${body.id}`,
+    destroyDemand: build.mutation<void, number>({
+      query: (id) => ({
+        url: `demands/delete/${id}`,
         method: 'DELETE',
-        body,
       }),
       invalidatesTags: ['Demands'],
     }),

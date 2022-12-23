@@ -24,21 +24,21 @@ export function DemandPage() {
 
   const dispatch = useAppDispatch();
 
-  const captions = useMemo(
+  const captions = useMemo<Array<{ caption: string; tooltip?: string }>>(
     () => [
-      '',
-      'ID',
-      'Experimento',
-      'Cliente',
-      'Status',
-      'R',
-      'M',
-      'P',
-      'T',
-      'U',
-      'Data de Criação',
-      'Última Atualização',
-      '',
+      { caption: '' },
+      { caption: 'ID', tooltip: 'Identificador' },
+      { caption: 'Experimento' },
+      { caption: 'Cliente' },
+      { caption: 'Status' },
+      { caption: 'R', tooltip: 'Roteirização' },
+      { caption: 'M', tooltip: 'Modelagem' },
+      { caption: 'P', tooltip: 'Programação' },
+      { caption: 'T', tooltip: 'Testes' },
+      { caption: 'U', tooltip: 'UALAB' },
+      { caption: 'Data de Criação' },
+      { caption: 'Última Atualização' },
+      { caption: '' },
     ],
     [],
   );

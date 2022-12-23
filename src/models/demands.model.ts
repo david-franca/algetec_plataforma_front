@@ -72,23 +72,27 @@ export type DemandCreate = Pick<Demand, 'status' | 'experiment_id' | 'institutio
   ualab_finishedAt: string;
 };
 
-export type DemandUpdate = Pick<Demand, 'id' | 'status' | 'experiment_id' | 'institution_id'> & {
+export type DemandUpdate = Partial<
+  Pick<Demand, 'status' | 'experiment_id' | 'institution_id'> & {
+    scripting_developers: number[];
+    coding_developers: number[];
+    testing_developers: number[];
+    modeling_developers: number[];
+    ualab_developers: number[];
+    scripting_progress: number;
+    coding_progress: number;
+    testing_progress: number;
+    modeling_progress: number;
+    ualab_progress: number;
+    scripting_finishedAt: string;
+    modeling_finishedAt: string;
+    coding_finishedAt: string;
+    testing_finishedAt: string;
+    ualab_finishedAt: string;
+  }
+> & {
+  id: number;
   logger_id: number;
-  scripting_developers: number[];
-  coding_developers: number[];
-  testing_developers: number[];
-  modeling_developers: number[];
-  ualab_developers: number[];
-  scripting: number;
-  coding: number;
-  testing: number;
-  modeling: number;
-  ualab: number;
-  scripting_finishedAt: string;
-  modeling_finishedAt: string;
-  coding_finishedAt: string;
-  testing_finishedAt: string;
-  ualab_finishedAt: string;
 };
 
 type DemandProduction = {
@@ -109,30 +113,7 @@ interface SelectOption {
   label: string;
 }
 
-// type DemandUpdateForm = {
-//   id: number;
-//   coding_developers: SelectOption[];
-//   modeling_developers: SelectOption[];
-//   testing_developers: SelectOption[];
-//   scripting_developers: SelectOption[];
-//   ualab_developers: SelectOption[];
-//   logger_id: number;
-//   scripting_deadline: number;
-//   coding_deadline: number;
-//   testing_deadline: number;
-//   modeling_deadline: number;
-//   ualab_deadline: number;
-//   scripting_finishedAt: string | null;
-//   modeling_finishedAt: string | null;
-//   coding_finishedAt: string | null;
-//   testing_finishedAt: string | null;
-//   ualab_finishedAt: string | null;
-//   status: DemandStatus;
-//   experiment_id: number;
-//   institution_id: number;
-// };
-
-interface DemandUpdateForm {
+export interface DemandUpdateForm {
   id: number;
   institution_id: number;
   experiment_id: number;
@@ -312,5 +293,30 @@ export class IDemand {
 
   toDemand(): Demand {
     return this.demand;
+  }
+
+  public static toPut(values: DemandUpdateForm, id: number): DemandUpdate {
+    return {
+      id: values.id,
+      institution_id: values.institution_id,
+      experiment_id: values.experiment_id,
+      status: values.status,
+      logger_id: id,
+      coding_developers: values.coding_developers.map((developer) => developer.value),
+      modeling_developers: values.modeling_developers.map((developer) => developer.value),
+      testing_developers: values.testing_developers.map((developer) => developer.value),
+      scripting_developers: values.scripting_developers.map((developer) => developer.value),
+      ualab_developers: values.ualab_developers.map((developer) => developer.value),
+      coding_finishedAt: values.coding_finishedAt.toISOString(),
+      modeling_finishedAt: values.modeling_finishedAt.toISOString(),
+      scripting_finishedAt: values.scripting_finishedAt.toISOString(),
+      testing_finishedAt: values.testing_finishedAt.toISOString(),
+      ualab_finishedAt: values.ualab_finishedAt.toISOString(),
+      coding_progress: values.coding,
+      modeling_progress: values.modeling,
+      scripting_progress: values.scripting,
+      testing_progress: values.testing,
+      ualab_progress: values.ualab,
+    };
   }
 }

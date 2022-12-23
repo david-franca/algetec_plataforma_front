@@ -26,7 +26,16 @@ export function UsersPage() {
 
   const dispatch = useAppDispatch();
 
-  const captions = ['', 'ID', 'Nome', 'Email', 'Criação', 'Atualização', 'Nível de Acesso', 'Equipe'];
+  const captions = [
+    { caption: '' },
+    { caption: 'ID', tooltip: 'Identificador' },
+    { caption: 'Nome' },
+    { caption: 'Email' },
+    { caption: 'Criação' },
+    { caption: 'Atualização' },
+    { caption: 'Nível de Acesso' },
+    { caption: 'Equipe' },
+  ];
 
   const content = useMemo<TableComponentProps['content']>(
     () =>

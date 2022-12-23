@@ -61,6 +61,7 @@ export const Tr = styled('tr', {
 export const Th = styled('th', {
   padding: '$xs',
   textAlign: 'start',
+  color: '$violet11',
 });
 
 export const Td = styled('td', {
@@ -81,7 +82,7 @@ export interface Content {
 
 export interface TableComponentProps {
   title: string;
-  captions: string[];
+  captions: Array<{ caption: string; tooltip?: string }>;
   content: Content[];
   menu?: DropdownMenuProps[];
   createElement: ReactNode;

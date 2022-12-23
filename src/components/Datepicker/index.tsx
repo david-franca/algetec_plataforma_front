@@ -55,6 +55,7 @@ export function DatePickerMulti({ id, getStartDate, getEndDate }: DatePickerMult
       id={id}
       locale={ptBR}
       selectsRange
+      dateFormat="dd/MM/yyyy"
       startDate={start}
       endDate={end}
       filterDate={isUnavailable}
@@ -73,7 +74,7 @@ interface DatePickerProps {
 }
 
 export function DatePicker({ id, getStartDate, dateTime }: DatePickerProps) {
-  const [date, setDate] = useState<Date | null>(dateTime || null);
+  const [date, setDate] = useState<Date | null | undefined>(null);
 
   const isUnavailable = useCallback((date: Date) => isBusinessDay(date), []);
 
@@ -87,7 +88,9 @@ export function DatePicker({ id, getStartDate, dateTime }: DatePickerProps) {
     <DatePickerStyled
       id={id}
       locale={ptBR}
-      selected={date}
+      dateFormat="dd/MM/yyyy"
+      minDate={new Date()}
+      selected={dateTime ?? date}
       filterDate={isUnavailable}
       onChange={(update) => {
         setDate(update as Date);

@@ -2,6 +2,7 @@ import { useFormik } from 'formik';
 import { useEffect, useMemo } from 'react';
 import { useParams } from 'react-router-dom';
 import SelectComponent from 'react-select';
+import { toast } from 'react-toastify';
 
 import { Button, Center, DashboardComponent, Inline, Title } from '../../components';
 import { Card } from '../../components/Card';
@@ -11,39 +12,12 @@ import { Select } from '../../components/Select';
 import { Separator } from '../../components/Separator';
 import { useAppSelector } from '../../config/hooks';
 import { selectCurrentUser } from '../../config/reducers/authSlice';
-import { IDemand } from '../../models/demands.model';
+import { DemandUpdateForm, IDemand } from '../../models/demands.model';
 import { DemandStatus } from '../../models/enum/demandStatus.enum';
-import { useGetDemandByIdQuery, useGetExperimentsQuery } from '../../services/demands.service';
+import { useGetDemandByIdQuery, useGetExperimentsQuery, useUpdateDemandMutation } from '../../services/demands.service';
 import { useGetInstitutionsQuery } from '../../services/institution.service';
 import { useGetUsersQuery } from '../../services/user.service';
 import { FormContainer, Input, Label } from '../Dashboard/styles';
-
-interface SelectOption {
-  value: number;
-  label: string;
-}
-interface InitialValues {
-  id: number;
-  institution_id: number;
-  experiment_id: number;
-  status: DemandStatus;
-  logger_id: number;
-  coding_developers: SelectOption[];
-  modeling_developers: SelectOption[];
-  testing_developers: SelectOption[];
-  scripting_developers: SelectOption[];
-  ualab_developers: SelectOption[];
-  scripting: number;
-  coding: number;
-  testing: number;
-  modeling: number;
-  ualab: number;
-  scripting_finishedAt: Date;
-  modeling_finishedAt: Date;
-  coding_finishedAt: Date;
-  testing_finishedAt: Date;
-  ualab_finishedAt: Date;
-}
 
 export function EditDemandPage() {
   const params = useParams();
@@ -56,7 +30,10 @@ export function EditDemandPage() {
   const { data: experiments, isLoading: experimentsLoading } = useGetExperimentsQuery();
   const { data: usersData, isLoading: usersLoading } = useGetUsersQuery();
 
-  const initialValues: InitialValues = {
+  const [updateDemand, { isLoading: updateDemandLoading, isSuccess: updateDemandSuccess, isError: updateDemandError }] =
+    useUpdateDemandMutation();
+
+  const initialValues: DemandUpdateForm = {
     id,
     institution_id: 0,
     experiment_id: 0,
@@ -67,24 +44,24 @@ export function EditDemandPage() {
     testing_developers: [],
     scripting_developers: [],
     ualab_developers: [],
-    coding: 0,
-    coding_finishedAt: new Date(),
-    modeling: 0,
-    modeling_finishedAt: new Date(),
     scripting: 0,
-    scripting_finishedAt: new Date(),
+    coding: 0,
     testing: 0,
-    testing_finishedAt: new Date(),
+    modeling: 0,
     ualab: 0,
+    coding_finishedAt: new Date(),
+    modeling_finishedAt: new Date(),
+    scripting_finishedAt: new Date(),
+    testing_finishedAt: new Date(),
     ualab_finishedAt: new Date(),
   };
   const formik = useFormik({
     initialValues,
-    onSubmit: () => {
-      // console.log(values);
+    onSubmit: (values) => {
+      const post = IDemand.toPut(values, currentUser ? currentUser.id : 0);
+      updateDemand(post);
     },
   });
-
   const statusOptions = useMemo(
     () => [
       { value: DemandStatus.DEVELOPMENT, label: 'Desenvolvimento' },
@@ -121,7 +98,6 @@ export function EditDemandPage() {
         : [],
     [experiments],
   );
-
   const selectComponentsStyles = useMemo(
     () => ({
       minHeight: 40,
@@ -133,7 +109,6 @@ export function EditDemandPage() {
     }),
     [],
   );
-
   const users = useMemo(() => {
     if (usersData) {
       return usersData.map((user) => ({
@@ -153,6 +128,15 @@ export function EditDemandPage() {
       });
     }
   }, [demandData, currentUser, id]);
+
+  useEffect(() => {
+    if (updateDemandSuccess) {
+      toast.success('Demanda atualizada com sucesso!');
+    }
+    if (updateDemandError) {
+      toast.error('Erro ao atualizar demanda!');
+    }
+  }, [updateDemandSuccess, updateDemandError]);
 
   return (
     <DashboardComponent isLoading={isLoading}>
@@ -520,7 +504,7 @@ export function EditDemandPage() {
         </Card>
 
         <Center>
-          <Button type="submit" color="green">
+          <Button type="submit" color="green" isLoading={updateDemandLoading}>
             <span>Salvar</span>
           </Button>
         </Center>
