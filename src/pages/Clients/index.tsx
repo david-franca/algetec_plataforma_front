@@ -25,7 +25,16 @@ export function ClientsPage() {
   const [closeDialog, setCloseDialog] = useState(false);
   const dispatch = useAppDispatch();
 
-  const captions = useMemo(() => ['', 'ID', 'Nome', 'Criado em', 'Atualizado em'], []);
+  const captions = useMemo(
+    () => [
+      { caption: '' },
+      { caption: 'ID', tooltip: 'Identificação' },
+      { caption: 'Nome' },
+      { caption: 'Criado em' },
+      { caption: 'Atualizado em' },
+    ],
+    [],
+  );
 
   const content = useMemo<Content[]>(
     () =>
