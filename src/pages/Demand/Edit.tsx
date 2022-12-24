@@ -294,9 +294,9 @@ export function EditDemandPage() {
                   }),
                 }}
                 options={users}
-                value={formik.values.coding_developers}
+                value={formik.values.ualab_developers}
                 onChange={(value) => {
-                  formik.setFieldValue('coding_developers', value);
+                  formik.setFieldValue('ualab_developers', value);
                 }}
               />
             </FormContainer>
@@ -350,9 +350,9 @@ export function EditDemandPage() {
                   }),
                 }}
                 options={users}
-                value={formik.values.coding_developers}
+                value={formik.values.testing_developers}
                 onChange={(value) => {
-                  formik.setFieldValue('coding_developers', value);
+                  formik.setFieldValue('testing_developers', value);
                 }}
               />
             </FormContainer>
@@ -412,9 +412,9 @@ export function EditDemandPage() {
                   }),
                 }}
                 options={users}
-                value={formik.values.coding_developers}
+                value={formik.values.modeling_developers}
                 onChange={(value) => {
-                  formik.setFieldValue('coding_developers', value);
+                  formik.setFieldValue('modeling_developers', value);
                 }}
               />
             </FormContainer>
@@ -474,9 +474,9 @@ export function EditDemandPage() {
                   }),
                 }}
                 options={users}
-                value={formik.values.coding_developers}
+                value={formik.values.scripting_developers}
                 onChange={(value) => {
-                  formik.setFieldValue('coding_developers', value);
+                  formik.setFieldValue('scripting_developers', value);
                 }}
               />
             </FormContainer>
