@@ -126,13 +126,10 @@ export default function CreateDemandPage() {
   const experimentOptions = useMemo(
     () =>
       experiments
-        ? [
-            { value: '0', label: 'Selecione uma prática' },
-            ...experiments.map((experiment) => ({
-              value: experiment.id.toString(),
-              label: `${experiment.id} - ${experiment.name}`,
-            })),
-          ]
+        ? experiments.map((experiment) => ({
+            value: experiment.id.toString(),
+            label: `${experiment.id} - ${experiment.name}`,
+          }))
         : [],
     [experiments],
   );
@@ -256,13 +253,34 @@ export default function CreateDemandPage() {
 
             <FormContainer>
               <Label htmlFor="experiment_id">Prática</Label>
-              <Select
+              {/* <Select
                 disabled={experimentsLoading}
                 value={formik.values.experiment_id.toString()}
                 onValueChange={(value) => {
                   formik.setFieldValue('experiment_id', value);
                 }}
                 items={experimentOptions}
+              /> */}
+              <SelectComponent
+                placeholder="Selecione uma prática"
+                isClearable
+                isSearchable
+                isDisabled={experimentsLoading}
+                styles={{
+                  control: (provided) => ({
+                    ...provided,
+                    ...selectComponentsStyles,
+                  }),
+                  container: (provided) => ({
+                    ...provided,
+                    width: '90%',
+                    color: '#5746af',
+                  }),
+                }}
+                options={experimentOptions}
+                onChange={(value) => {
+                  formik.setFieldValue('experiment_id', value?.value);
+                }}
               />
             </FormContainer>
           </Inline>
