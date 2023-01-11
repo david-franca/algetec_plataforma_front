@@ -61,6 +61,7 @@ export function LoginPage() {
           <FormContainer>
             <FormLabel htmlFor="email">Email</FormLabel>
             <FormInput
+              placeholder="Digite seu email"
               id="email"
               name="email"
               type="email"
