@@ -1,7 +1,6 @@
 import { CheckedState } from '@radix-ui/react-checkbox';
 import { useMemo, useState } from 'react';
 import { CSVLink } from 'react-csv';
-import { Navigate } from 'react-router-dom';
 
 import { DashboardComponent, Stack } from '../../components';
 import { DropdownMenuProps } from '../../components/DropdownMenu';
@@ -19,7 +18,6 @@ import CreateUserPage from './Create';
 import { EditUser } from './Edit';
 
 export function UsersPage() {
-  const { isLoggedIn } = useAppSelector((state) => state.auth);
   const { users: usersCart } = useAppSelector((state) => state.cart);
   const { data: usersData, isLoading } = useGetUsersQuery();
   const [closeDialog, setCloseDialog] = useState(false);
@@ -117,10 +115,6 @@ export function UsersPage() {
     [usersData, exportData, exportHeaders],
   );
 
-  if (!isLoggedIn) {
-    return <Navigate to="/login" replace />;
-  }
-
   return (
     <DashboardComponent isLoading={isLoading}>
       <Stack
@@ -135,7 +129,10 @@ export function UsersPage() {
           content={content}
           menu={menu}
           closeDialog={closeDialog}
-          createElement={<CreateUserPage onClose={setCloseDialog} />}
+          create={{
+            element: <CreateUserPage onClose={setCloseDialog} />,
+            subject: 'User',
+          }}
           editElement={<EditUser onClose={setCloseDialog} id={1} />}
           editTitle="Editar Usuário"
         />

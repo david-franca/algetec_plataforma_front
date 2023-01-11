@@ -16,7 +16,7 @@ export type User = {
 };
 
 export interface UserResponse {
-  user: Omit<User, 'role' | 'department'>;
+  user: Omit<User, 'department'>[];
   token: Token;
 }
 

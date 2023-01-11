@@ -6,6 +6,7 @@ import { forwardRef, ReactNode } from 'react';
 import { Link, Navigate } from 'react-router-dom';
 
 import logo from '../../assets/logo.png';
+import { CAN } from '../../config/can';
 import { useAppSelector } from '../../config/hooks';
 import { Flex } from '../box';
 import { Footer } from '../Footer';
@@ -64,32 +65,36 @@ export function DashboardComponent({ children, isLoading = false }: DashboardCon
           <NavigationMenu orientation="vertical">
             <NavigationMenuList>
               <NavigationMenuItem>
-                <NavigationMenuTrigger icon={<HomeIcon />}>
-                  <StyledLink to="/dashboard">Dashboard</StyledLink>
-                </NavigationMenuTrigger>
+                <StyledLink to="/dashboard">
+                  <NavigationMenuTrigger icon={<HomeIcon />}>Dashboard</NavigationMenuTrigger>
+                </StyledLink>
               </NavigationMenuItem>
               <NavigationMenuItem>
-                <NavigationMenuTrigger icon={<ExternalLinkIcon />}>
-                  <StyledAnchor href="https://catalogoalgetec.grupoa.education/login" target="_blank">
-                    Catálogo
-                  </StyledAnchor>
-                </NavigationMenuTrigger>
+                <StyledAnchor href="https://catalogoalgetec.grupoa.education/login" target="_blank">
+                  <NavigationMenuTrigger icon={<ExternalLinkIcon />}>Catálogo</NavigationMenuTrigger>
+                </StyledAnchor>
               </NavigationMenuItem>
-              <NavigationMenuItem>
-                <NavigationMenuTrigger icon={<BackpackIcon />}>
-                  <StyledLink to="/dashboard/clients">Clientes</StyledLink>
-                </NavigationMenuTrigger>
-              </NavigationMenuItem>
-              <NavigationMenuItem>
-                <NavigationMenuTrigger icon={<PersonIcon />}>
-                  <StyledLink to="/dashboard/users">Usuários</StyledLink>
-                </NavigationMenuTrigger>
-              </NavigationMenuItem>
-              <NavigationMenuItem>
-                <NavigationMenuTrigger icon={<RocketIcon />}>
-                  <StyledLink to="/dashboard/issues">Entregas</StyledLink>
-                </NavigationMenuTrigger>
-              </NavigationMenuItem>
+              {CAN('read', 'Institution') && (
+                <NavigationMenuItem>
+                  <StyledLink to="/dashboard/clients">
+                    <NavigationMenuTrigger icon={<BackpackIcon />}>Clientes</NavigationMenuTrigger>
+                  </StyledLink>
+                </NavigationMenuItem>
+              )}
+              {CAN('read', 'User') && (
+                <NavigationMenuItem>
+                  <StyledLink to="/dashboard/users">
+                    <NavigationMenuTrigger icon={<PersonIcon />}>Usuários</NavigationMenuTrigger>
+                  </StyledLink>
+                </NavigationMenuItem>
+              )}
+              {CAN('read', 'Demand') && (
+                <NavigationMenuItem>
+                  <StyledLink to="/dashboard/issues">
+                    <NavigationMenuTrigger icon={<RocketIcon />}>Entregas</NavigationMenuTrigger>
+                  </StyledLink>
+                </NavigationMenuItem>
+              )}
             </NavigationMenuList>
           </NavigationMenu>
         </Sidebar>
