@@ -305,7 +305,7 @@ export const StyledTrigger = styled(NavigationMenuPrimitive.Trigger, {
   width: 'calc(100% - 36px)',
   fontWeight: '$regular',
   fontSize: '$large',
-  color: '#000',
+  color: indigo.indigo11,
   borderLeft: '0.5rem solid transparent',
 
   '&[data-state="open"]': {

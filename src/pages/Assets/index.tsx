@@ -28,7 +28,7 @@ export function AssetsPage() {
   const { isLoggedIn } = useAppSelector((state) => state.auth);
 
   if (!isLoggedIn) {
-    return <Navigate to="/login" replace />;
+    return <Navigate to="/" replace />;
   }
 
   return (

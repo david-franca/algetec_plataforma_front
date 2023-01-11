@@ -1,7 +1,6 @@
 import { CheckedState } from '@radix-ui/react-checkbox';
 import { useMemo, useState } from 'react';
 import { CSVLink } from 'react-csv';
-import { Navigate } from 'react-router-dom';
 
 import { DashboardComponent, Stack } from '../../components';
 import { DropdownMenuProps } from '../../components/DropdownMenu';
@@ -19,7 +18,6 @@ import { CreateInstitution } from './Create';
 import { EditClient } from './Edit';
 
 export function ClientsPage() {
-  const { isLoggedIn } = useAppSelector((state) => state.auth);
   const { institutions: institutionsCart } = useAppSelector((state) => state.institution);
   const { data: institutionsData, isLoading } = useGetInstitutionsQuery();
   const [closeDialog, setCloseDialog] = useState(false);
@@ -107,9 +105,6 @@ export function ClientsPage() {
     [institutionsData, exportData, exportHeaders],
   );
 
-  if (!isLoggedIn) {
-    return <Navigate to="/login" replace />;
-  }
   return (
     <DashboardComponent isLoading={isLoading}>
       <Stack
@@ -123,7 +118,10 @@ export function ClientsPage() {
           content={content}
           menu={menu}
           closeDialog={closeDialog}
-          createElement={<CreateInstitution onClose={setCloseDialog} />}
+          create={{
+            element: <CreateInstitution onClose={setCloseDialog} />,
+            subject: 'Institution',
+          }}
           editElement={<EditClient id={1} onClose={setCloseDialog} />}
           editTitle="Editar Instituição"
         />

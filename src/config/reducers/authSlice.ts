@@ -8,7 +8,7 @@ import { RootState } from '../store';
 interface AuthState {
   isLoggedIn: boolean;
   token: Token | null;
-  user: Omit<User, 'role' | 'department'> | null;
+  user: Omit<User, 'department'> | null;
 }
 
 const initialState: AuthState = {
@@ -26,7 +26,8 @@ export const authSlice = createSlice({
   extraReducers: (builder) => {
     builder.addMatcher(authApi.endpoints.login.matchFulfilled, (state, { payload }) => {
       state.isLoggedIn = true;
-      state.user = payload.user;
+      // eslint-disable-next-line prefer-destructuring
+      state.user = payload.user[0];
       state.token = payload.token;
     });
     builder.addMatcher(authApi.endpoints.register.matchFulfilled, (state) => {
