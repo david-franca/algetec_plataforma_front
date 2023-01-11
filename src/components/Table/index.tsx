@@ -3,6 +3,7 @@ import { PlusIcon } from '@radix-ui/react-icons';
 import { nanoid } from '@reduxjs/toolkit';
 import { ReactNode } from 'react';
 import { useLocation } from 'react-router-dom';
+import { CAN, Subjects } from '../../config/can';
 
 import { styled } from '../../config/styles/stitches.config';
 import { Box, Center, Flex } from '../box';
@@ -85,12 +86,15 @@ export interface TableComponentProps {
   captions: Array<{ caption: string; tooltip?: string }>;
   content: Content[];
   menu?: DropdownMenuProps[];
-  createElement: ReactNode;
   closeDialog: boolean;
   editElement: JSX.Element;
   editTitle: string;
-  createLink?: boolean;
   updateLink?: boolean;
+  create: {
+    element: ReactNode;
+    link?: boolean;
+    subject: Subjects;
+  };
 }
 
 export function TableComponent({
@@ -98,12 +102,11 @@ export function TableComponent({
   content,
   captions,
   menu,
-  createElement,
   closeDialog,
   editElement,
   editTitle,
-  createLink,
   updateLink,
+  create,
 }: TableComponentProps) {
   const { pathname } = useLocation();
   return (
@@ -125,16 +128,18 @@ export function TableComponent({
             gap: '$sm',
           }}
         >
-          {createLink ? (
-            <Tooltip label="Adicionar">
-              <Button color="grass">
+          {create.link ? (
+            CAN('create', create.subject) && (
+              <Tooltip label="Adicionar">
                 <StyledLink to={`${pathname}/create`}>
-                  <PlusIcon />
+                  <Button color="grass">
+                    <PlusIcon />
+                  </Button>
                 </StyledLink>
-              </Button>
-            </Tooltip>
+              </Tooltip>
+            )
           ) : (
-            <Dialog title={`Adicionar ${title}`} element={createElement} close={closeDialog}>
+            <Dialog title={`Adicionar ${title}`} element={create.element} close={closeDialog}>
               <Button color="grass">
                 <Tooltip label="Adicionar">
                   <PlusIcon />
@@ -168,6 +173,5 @@ export function TableComponent({
 
 TableComponent.defaultProps = {
   menu: [],
-  createLink: false,
   updateLink: false,
 };

@@ -1,11 +1,9 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Navigate } from 'react-router-dom';
 
 import { DashboardComponent, Flex, Grid, Inline, Stack, Title } from '../../components';
 import { Card } from '../../components/Card';
 import { Chart } from '../../components/Chart';
 import { Select } from '../../components/Select';
-import { useAppSelector } from '../../config/hooks';
 import { User } from '../../models';
 import { Demand } from '../../models/demands.model';
 import { useGetDemandsQuery } from '../../services/demands.service';
@@ -216,12 +214,6 @@ export function Dashboard() {
     }
   }, [select, issues, users, teamsItems]);
 
-  const { isLoggedIn } = useAppSelector((state) => state.auth);
-
-  if (!isLoggedIn) {
-    return <Navigate to="/login" replace />;
-  }
-
   return (
     <DashboardComponent>
       <Stack
@@ -262,6 +254,7 @@ export function Dashboard() {
               dashArray={[5]}
             />
           </Card>
+
           <Card
             css={{
               gridArea: '1 / 2 / 2 / 3',

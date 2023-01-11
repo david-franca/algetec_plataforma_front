@@ -137,10 +137,13 @@ export function DemandPage() {
           content={content}
           menu={menu}
           closeDialog={false}
-          createElement={<CreateDemandPage />}
+          create={{
+            element: <CreateDemandPage />,
+            link: true,
+            subject: 'Demand',
+          }}
           editElement={<EditDemandPage />}
           editTitle="Editar Entrega"
-          createLink
           updateLink
         />
       </Stack>
