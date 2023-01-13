@@ -5,7 +5,7 @@ import { Card } from '../../components/Card';
 import { Chart } from '../../components/Chart';
 import { Select } from '../../components/Select';
 import { User } from '../../models';
-import { Demand } from '../../models/demands.model';
+import { IDemand } from '../../models/demands.model';
 import { useGetDemandsQuery } from '../../services/demands.service';
 import { useGetUsersQuery } from '../../services/user.service';
 import { Text } from './styles';
@@ -21,7 +21,7 @@ export function Dashboard() {
   const { data: usersData } = useGetUsersQuery();
 
   const [users, setUsers] = useState<User[]>([]);
-  const [issues, setIssues] = useState<Demand[]>([]);
+  const [issues, setIssues] = useState<IDemand[]>([]);
 
   const [items1, setItems1] = useState<SelectOption[]>([]);
   const [items2, setItems2] = useState<SelectOption[]>([]);
