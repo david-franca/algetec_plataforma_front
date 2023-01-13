@@ -4,6 +4,7 @@ export type Role = {
   assets: boolean;
   admin: boolean;
   demands: boolean;
+  demands_admin: boolean;
   created_at: string;
   updated_at: string;
 };

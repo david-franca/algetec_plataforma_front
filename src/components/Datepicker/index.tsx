@@ -4,6 +4,7 @@ import ptBR from 'date-fns/locale/pt-BR';
 import { useCallback, useEffect, useState } from 'react';
 import ReactDatePicker from 'react-datepicker';
 
+import moment from 'moment';
 import { styled } from '../../config/styles/stitches.config';
 import { isBusinessDay } from '../../helpers/isBusinessDay';
 
@@ -25,7 +26,7 @@ export const DatePickerStyled = styled(ReactDatePicker, {
 
   '&:hover': { backgroundColor: '$mauve3' },
   '&:disabled': {
-    backgroundColor: '$violet6',
+    backgroundColor: '$violet3',
     color: '$violet8',
     boxShadow: '0 0 0 1px $violet2',
     pointerEvents: 'none',
@@ -71,9 +72,11 @@ interface DatePickerProps {
   id: string;
   getStartDate: (date: Date) => void;
   dateTime?: Date;
+  minDate?: Date;
+  disabled?: boolean;
 }
 
-export function DatePicker({ id, getStartDate, dateTime }: DatePickerProps) {
+export function DatePicker({ id, getStartDate, dateTime, disabled, minDate }: DatePickerProps) {
   const [date, setDate] = useState<Date | null | undefined>(null);
 
   const isUnavailable = useCallback((date: Date) => isBusinessDay(date), []);
@@ -86,10 +89,11 @@ export function DatePicker({ id, getStartDate, dateTime }: DatePickerProps) {
 
   return (
     <DatePickerStyled
+      disabled={disabled}
       id={id}
       locale={ptBR}
       dateFormat="dd/MM/yyyy"
-      minDate={new Date()}
+      minDate={minDate ? moment(minDate).add(1, 'day').toDate() : null}
       selected={dateTime ?? date}
       filterDate={isUnavailable}
       onChange={(update) => {
@@ -102,4 +106,6 @@ export function DatePicker({ id, getStartDate, dateTime }: DatePickerProps) {
 
 DatePicker.defaultProps = {
   dateTime: null,
+  disabled: false,
+  minDate: null,
 };

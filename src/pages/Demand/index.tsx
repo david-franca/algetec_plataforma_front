@@ -5,7 +5,7 @@ import { CSVLink } from 'react-csv';
 import { DashboardComponent, Stack } from '../../components';
 import { StyledLink } from '../../components/Dashboard/styles';
 import { DropdownMenuProps } from '../../components/DropdownMenu';
-import { Content, TableComponent } from '../../components/Table';
+import { Captions, Content, TableComponent } from '../../components/Table';
 import { useAppDispatch, useAppSelector } from '../../config/hooks';
 import {
   addManyToDemandsCart,
@@ -14,9 +14,24 @@ import {
   removeFromDemandsCart,
 } from '../../config/reducers/cartSlice';
 import { handleStringDate } from '../../helpers';
+import { DemandStatus } from '../../models/enum/demandStatus.enum';
 import { useGetDemandsQuery } from '../../services/demands.service';
 import CreateDemandPage from './Create';
 import { EditDemandPage } from './Edit';
+
+interface ContentValues {
+  id: string;
+  experiment: JSX.Element;
+  client: string;
+  status: DemandStatus;
+  scripting: number;
+  modeling: number;
+  coding: number;
+  testing: number;
+  ualab: number;
+  created_at: string | null;
+  updated_at: string | null;
+}
 
 export function DemandPage() {
   const { demands: demandCart } = useAppSelector((state) => state.cart);
@@ -24,43 +39,41 @@ export function DemandPage() {
 
   const dispatch = useAppDispatch();
 
-  const captions = useMemo<Array<{ caption: string; tooltip?: string }>>(
+  const captions = useMemo<Captions[]>(
     () => [
-      { caption: '' },
-      { caption: 'ID', tooltip: 'Identificador' },
-      { caption: 'Experimento' },
-      { caption: 'Cliente' },
-      { caption: 'Status' },
-      { caption: 'R', tooltip: 'Roteirização' },
-      { caption: 'M', tooltip: 'Modelagem' },
-      { caption: 'P', tooltip: 'Programação' },
-      { caption: 'T', tooltip: 'Testes' },
-      { caption: 'U', tooltip: 'UALAB' },
-      { caption: 'Data de Criação' },
-      { caption: 'Última Atualização' },
-      { caption: '' },
+      { caption: 'ID', tooltip: 'Identificador', accessor: 'id', sortable: true },
+      { caption: 'Experimento', accessor: 'experiment', sortable: false },
+      { caption: 'Cliente', accessor: 'client', sortable: true },
+      { caption: 'Status', accessor: 'status', sortable: true },
+      { caption: 'R', tooltip: 'Roteirização', accessor: 'scripting', sortable: true },
+      { caption: 'M', tooltip: 'Modelagem', accessor: 'modeling', sortable: true },
+      { caption: 'P', tooltip: 'Programação', accessor: 'coding', sortable: true },
+      { caption: 'T', tooltip: 'Testes', accessor: 'testing', sortable: true },
+      { caption: 'U', tooltip: 'UALAB', accessor: 'ualab', sortable: true },
+      { caption: 'Criação', accessor: 'created_at', sortable: true },
+      { caption: 'Atualização', accessor: 'updated_at', sortable: true },
     ],
     [],
   );
 
-  const content = useMemo<Content[]>(
+  const content = useMemo<Content<ContentValues>[]>(
     () =>
       demandsData
         ? demandsData.map((demand) => ({
             id: demand.id,
-            value: [
-              demand.id.toString(),
-              <StyledLink to={`/dashboard/production/${demand.id}`}>{demand.experiments.name}</StyledLink>,
-              demand.institutions.name,
-              demand.status,
-              demand.scripting,
-              demand.modeling,
-              demand.coding,
-              demand.testing,
-              demand.ualab,
-              handleStringDate(demand.created_at),
-              handleStringDate(demand.updated_at),
-            ],
+            value: {
+              id: demand.id.toString(),
+              experiment: <StyledLink to={`/dashboard/production/${demand.id}`}>{demand.experiments.name}</StyledLink>,
+              client: demand.institutions.name,
+              status: demand.status,
+              scripting: demand.scripting,
+              modeling: demand.modeling,
+              coding: demand.coding,
+              testing: demand.testing,
+              ualab: demand.ualab,
+              created_at: handleStringDate(demand.created_at),
+              updated_at: handleStringDate(demand.updated_at),
+            },
             checked: !!demandCart.find((cartDemand) => cartDemand.id === demand.id),
             onCheckedChange: (checked: CheckedState) =>
               checked === true ? dispatch(addToDemandsCart(demand)) : dispatch(removeFromDemandsCart(demand)),

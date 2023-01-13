@@ -1,18 +1,18 @@
 import { api } from '../config/reducers/apiSlice';
-import { Demand, DemandCreate, DemandUpdate } from '../models/demands.model';
+import { IDemand, DemandCreate, DemandUpdate } from '../models/demands.model';
 import { Experiment } from '../models/experiments.model';
 
 export const demandsApi = api.injectEndpoints({
   endpoints: (build) => ({
-    getDemands: build.query<Demand[], void>({
+    getDemands: build.query<IDemand[], void>({
       query: () => 'demands/all',
       providesTags: ['Demands'],
     }),
-    getDemandById: build.query<Demand, number>({
+    getDemandById: build.query<IDemand, number>({
       query: (id) => `demands/show/${id}`,
       providesTags: ['Demands'],
     }),
-    storeDemand: build.mutation<Demand, DemandCreate>({
+    storeDemand: build.mutation<IDemand, DemandCreate>({
       query: (body) => ({
         url: 'demands/create',
         method: 'POST',
@@ -20,7 +20,7 @@ export const demandsApi = api.injectEndpoints({
       }),
       invalidatesTags: ['Demands'],
     }),
-    updateDemand: build.mutation<Demand, DemandUpdate>({
+    updateDemand: build.mutation<IDemand, DemandUpdate>({
       query: (body) => ({
         url: `demands/update/${body.id}`,
         method: 'PUT',

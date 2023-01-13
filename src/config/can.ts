@@ -48,7 +48,17 @@ const defineAbilitiesFor = (user: Omit<User, 'department'> | null) => {
     can('read', 'all');
 
     if (user.role.admin) {
-      can('manage', 'all');
+      can('manage', ['Role', 'Institution', 'Department', 'User']);
+    }
+    if (user.role.assets) {
+      can('manage', ['Asset', 'AssetTag', 'ContentType']);
+    }
+    if (user.role.demands) {
+      can('read', 'Demand');
+      can('update', 'Demand');
+    }
+    if (user.role.demands_admin) {
+      can(['delete', 'create'], 'Demand');
     } else {
       cannot('manage', 'User');
       cannot('manage', 'Institution');

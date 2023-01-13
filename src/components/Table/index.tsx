@@ -1,7 +1,7 @@
 import { CheckedState } from '@radix-ui/react-checkbox';
 import { PlusIcon } from '@radix-ui/react-icons';
 import { nanoid } from '@reduxjs/toolkit';
-import { ReactNode } from 'react';
+import { ReactNode, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { CAN, Subjects } from '../../config/can';
 
@@ -17,7 +17,7 @@ import { Separator } from '../Separator';
 import { Title } from '../text';
 import { Tooltip } from '../Tooltip';
 import { TableBody } from './TableBody';
-import { TableHead } from './TableHead';
+import { Order, TableHead } from './TableHead';
 
 export const Table = styled('table', {
   width: '100%',
@@ -60,9 +60,9 @@ export const Tr = styled('tr', {
 });
 
 export const Th = styled('th', {
-  padding: '$xs',
   textAlign: 'start',
   color: '$violet11',
+  paddingLeft: '$xs',
 });
 
 export const Td = styled('td', {
@@ -74,17 +74,19 @@ export const Td = styled('td', {
   maxWidth: '150px',
 });
 
-export interface Content {
-  value: Array<string | number | JSX.Element | JSX.Element[] | null>;
+export interface Content<T> {
+  value: T;
   id: number;
   checked: boolean;
   onCheckedChange: (checked: CheckedState) => void;
 }
 
-export interface TableComponentProps {
+export type Captions = { caption: string; tooltip?: string; accessor: string; sortable: boolean };
+
+export interface TableComponentProps<T> {
   title: string;
-  captions: Array<{ caption: string; tooltip?: string }>;
-  content: Content[];
+  captions: Array<Captions>;
+  content: Content<T>[];
   menu?: DropdownMenuProps[];
   closeDialog: boolean;
   editElement: JSX.Element;
@@ -97,7 +99,7 @@ export interface TableComponentProps {
   };
 }
 
-export function TableComponent({
+export function TableComponent<T>({
   title,
   content,
   captions,
@@ -107,8 +109,30 @@ export function TableComponent({
   editTitle,
   updateLink,
   create,
-}: TableComponentProps) {
+}: TableComponentProps<T>) {
   const { pathname } = useLocation();
+  const [tableData, setTableData] = useState(content);
+
+  const handleSorting = (sortField: string, sortOrder: Order) => {
+    if (sortField) {
+      const sortFieldValue = sortField as keyof T;
+      const sorted = [...content].sort((a, b) => {
+        if (a.value[sortFieldValue] === null) return 1;
+        if (b.value[sortFieldValue] === null) return -1;
+        if (a.value[sortFieldValue] === null && b.value[sortFieldValue] === null) return 0;
+        if (typeof a.value[sortFieldValue] !== 'object' && typeof b.value[sortFieldValue] !== 'object') {
+          return (
+            String(a.value[sortFieldValue]).localeCompare(String(b.value[sortFieldValue]), 'en', {
+              numeric: true,
+            }) * (sortOrder === 'asc' ? 1 : -1)
+          );
+        }
+        return 0;
+      });
+      setTableData(sorted);
+    }
+  };
+
   return (
     <Card
       css={{
@@ -157,14 +181,20 @@ export function TableComponent({
         }}
       >
         {menu
-          ? menu.map(({ content, label }) => <DropdownMenu content={content} label={label} key={nanoid()} />)
+          ? menu.map((config) => <DropdownMenu content={config.content} label={config.label} key={nanoid()} />)
           : null}
       </Box>
       {menu ? <Separator /> : null}
       <ScrollArea>
         <Table>
-          <TableHead captions={captions} />
-          <TableBody content={content} editElement={editElement} editTitle={editTitle} updateLink={updateLink} />
+          <TableHead captions={captions} handleSorting={handleSorting} />
+          <TableBody
+            captions={captions}
+            content={tableData}
+            editElement={editElement}
+            editTitle={editTitle}
+            updateLink={updateLink}
+          />
         </Table>
       </ScrollArea>
     </Card>

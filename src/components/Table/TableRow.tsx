@@ -4,7 +4,7 @@ import { nanoid } from '@reduxjs/toolkit';
 import { cloneElement } from 'react';
 import { useLocation } from 'react-router-dom';
 
-import { Td, Tr } from '.';
+import { Captions, Td, Tr } from '.';
 import { Inline } from '../box';
 import { Button } from '../button';
 import { Checkbox } from '../Checkbox';
@@ -12,24 +12,55 @@ import { StyledLink } from '../Dashboard/styles';
 import { Dialog } from '../Dialog';
 import { Tooltip } from '../Tooltip';
 
-interface TableRowProps {
+interface TableRowProps<T> {
   id: string | number;
-  value: (string | number | JSX.Element | JSX.Element[] | null)[];
+  value: T;
   checked: boolean;
   onCheckedChange: (checked: CheckedState) => void;
   editElement: JSX.Element;
   editTitle: string;
   updateLink?: boolean;
+  captions: Array<Captions>;
 }
 
-export function TableRow({ id, value, checked, onCheckedChange, editElement, editTitle, updateLink }: TableRowProps) {
+export function TableRow<K>({
+  id,
+  value,
+  checked,
+  onCheckedChange,
+  editElement,
+  editTitle,
+  updateLink,
+  captions,
+}: TableRowProps<K>) {
   const { pathname } = useLocation();
   return (
     <Tr key={nanoid()}>
       <Td>
         <Checkbox checked={checked} onCheckedChange={onCheckedChange} />
       </Td>
-      {value.map((item) => (
+      {captions.map(({ accessor }) => {
+        const accessorValue = accessor as keyof K;
+        const item = value[accessorValue] as string | number | JSX.Element | JSX.Element[];
+        return (
+          <Tooltip key={nanoid()} label={typeof item !== 'object' ? `${item}` : undefined}>
+            {typeof item === 'number' ? (
+              <Td
+                css={{
+                  fontWeight: '$bold',
+                  textAlign: 'center',
+                }}
+                key={nanoid()}
+              >
+                {item}%
+              </Td>
+            ) : (
+              <Td key={nanoid()}>{item}</Td>
+            )}
+          </Tooltip>
+        );
+      })}
+      {/* {value.map((item) => (
         <Tooltip key={nanoid()} label={typeof item !== 'object' ? `${item}` : undefined}>
           {typeof item === 'number' ? (
             <Td
@@ -45,7 +76,7 @@ export function TableRow({ id, value, checked, onCheckedChange, editElement, edi
             <Td key={nanoid()}>{item}</Td>
           )}
         </Tooltip>
-      ))}
+      ))} */}
       <Td>
         <Inline css={{ gap: '$sm' }}>
           {updateLink ? (

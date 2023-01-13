@@ -1,4 +1,5 @@
 import { handleStringDate } from '../helpers';
+import { isBusinessDay } from '../helpers/isBusinessDay';
 import { DemandStatus } from './enum/demandStatus.enum';
 import { Experiment } from './experiments.model';
 import { Institution } from './institution.model';
@@ -23,15 +24,15 @@ type DemandLog = {
   type: string;
   progress: number;
   deadline: number;
-  started_at: string | null;
-  finished_at: string | null;
+  started_at: string;
+  finished_at: string;
   created_at: string;
   updated_at: string;
   logger: Logger;
   demandLog_developers: Omit<User, 'role' | 'department'>[];
 };
 
-export interface Demand {
+export interface IDemand {
   id: number;
   experiment_id: number;
   institution_id: number;
@@ -48,7 +49,7 @@ export interface Demand {
   demandLogs: DemandLog[];
 }
 
-export type DemandCreate = Pick<Demand, 'status' | 'experiment_id' | 'institution_id'> & {
+export type DemandCreate = Pick<IDemand, 'status' | 'experiment_id' | 'institution_id'> & {
   logger_id: number;
   scripting_deadline: number;
   coding_deadline: number;
@@ -73,7 +74,7 @@ export type DemandCreate = Pick<Demand, 'status' | 'experiment_id' | 'institutio
 };
 
 export type DemandUpdate = Partial<
-  Pick<Demand, 'status' | 'experiment_id' | 'institution_id'> & {
+  Pick<IDemand, 'status' | 'experiment_id' | 'institution_id'> & {
     scripting_developers: number[];
     coding_developers: number[];
     testing_developers: number[];
@@ -130,15 +131,32 @@ export interface DemandUpdateForm {
   modeling: number;
   ualab: number;
   scripting_finishedAt: Date;
+  scripting_startedAt: Date;
+  scripting_deadline: number;
+  scripting_percent: number;
   modeling_finishedAt: Date;
+  modeling_startedAt: Date;
+  modeling_deadline: number;
+  modeling_percent: number;
   coding_finishedAt: Date;
+  coding_startedAt: Date;
+  coding_deadline: number;
+  coding_percent: number;
   testing_finishedAt: Date;
+  testing_startedAt: Date;
+  testing_deadline: number;
+  testing_percent: number;
   ualab_finishedAt: Date;
+  ualab_startedAt: Date;
+  ualab_deadline: number;
+  ualab_percent: number;
 }
 
-export class IDemand {
+type TeamLog = 'Coding' | 'Testing' | 'Scripting' | 'Modeling' | 'Ualab';
+
+export class Demand {
   // eslint-disable-next-line no-useless-constructor
-  constructor(private demand: Demand) {}
+  constructor(private demand: IDemand) {}
 
   get id(): number {
     return this.demand.id;
@@ -172,126 +190,166 @@ export class IDemand {
     return this.demand.ualab;
   }
 
-  get mostRecentScriptingLog() {
+  private lastLog(team: TeamLog): DemandLog {
     return this.demand.demandLogs
-      .filter((demandLog) => demandLog.type === 'Scripting')
+      .filter((demandLog) => demandLog.type === team)
       .sort((a, b) => (a.id > b.id ? 1 : -1))[0];
   }
 
-  get mostRecentCodingLog() {
-    return this.demand.demandLogs
-      .filter((demandLog) => demandLog.type === 'Coding')
-      .sort((a, b) => (a.id > b.id ? 1 : -1))[0];
+  private handleLogDates(team: TeamLog) {
+    const lastLog = this.lastLog(team);
+    const startedAt = new Date(lastLog.started_at);
+    const finishedAt = new Date(lastLog.finished_at);
+
+    return { startedAt, finishedAt };
   }
 
-  get mostRecentTestingLog() {
-    return this.demand.demandLogs
-      .filter((demandLog) => demandLog.type === 'Testing')
-      .sort((a, b) => (a.id > b.id ? 1 : -1))[0];
+  private demandLogDevelopers(team: TeamLog): SelectOption[] {
+    return this.lastLog(team).demandLog_developers.map((developer) => ({
+      value: developer.id,
+      label: developer.name,
+    }));
   }
 
-  get mostRecentModelingLog() {
-    return this.demand.demandLogs
-      .filter((demandLog) => demandLog.type === 'Modeling')
-      .sort((a, b) => (a.id > b.id ? 1 : -1))[0];
+  getDates(team: TeamLog): Date[] {
+    const { startedAt, finishedAt } = this.handleLogDates(team);
+    const dates = [];
+
+    for (let i = startedAt; i <= finishedAt; i.setDate(i.getDate() + 1)) {
+      if (isBusinessDay(i)) {
+        dates.push(new Date(i));
+      }
+    }
+
+    return dates;
   }
 
-  get mostRecentUalabLog() {
-    return this.demand.demandLogs
-      .filter((demandLog) => demandLog.type === 'Ualab')
-      .sort((a, b) => (a.id > b.id ? 1 : -1))[0];
+  verifyDate(team: TeamLog): number {
+    const today = new Date();
+    const teamDates = this.getDates(team);
+
+    return (
+      teamDates.findIndex(
+        (date) =>
+          date.getDate() === today.getDate() &&
+          date.getMonth() === today.getMonth() &&
+          date.getFullYear() === today.getFullYear(),
+      ) + 1
+    );
   }
 
-  toProduction(): DemandProduction {
+  getPercent(team: TeamLog): number {
+    const todayIndex = this.verifyDate(team);
+
+    if (todayIndex === 0) {
+      return 100;
+    }
+
+    const teamDates = this.getDates(team);
+
+    return Math.round((todayIndex * 100) / teamDates.length);
+  }
+
+  public toProduction(): DemandProduction {
     return {
       experimentName: this.experimentName,
       status: this.status,
       production: [
         {
           type: 'Roteirização',
-          responsible: this.mostRecentScriptingLog.demandLog_developers.map((developer) => developer.name).join(', '),
-          started_at: handleStringDate(this.mostRecentScriptingLog.started_at) || '',
-          finished_at: handleStringDate(this.mostRecentScriptingLog.finished_at) || '',
+          responsible: this.lastLog('Scripting')
+            .demandLog_developers.map((developer) => developer.name)
+            .join(', '),
+          started_at: handleStringDate(this.lastLog('Scripting').started_at) || '',
+          finished_at: handleStringDate(this.lastLog('Scripting').finished_at) || '',
           progress: this.scripting,
-          deadline: this.mostRecentScriptingLog.deadline,
+          deadline: this.lastLog('Scripting').deadline,
         },
         {
           type: 'Programação',
-          responsible: this.mostRecentCodingLog.demandLog_developers.map((developer) => developer.name).join(', '),
-          started_at: handleStringDate(this.mostRecentCodingLog.started_at) || '',
-          finished_at: handleStringDate(this.mostRecentCodingLog.finished_at) || '',
+          responsible: this.lastLog('Coding')
+            .demandLog_developers.map((developer) => developer.name)
+            .join(', '),
+          started_at: handleStringDate(this.lastLog('Coding').started_at) || '',
+          finished_at: handleStringDate(this.lastLog('Coding').finished_at) || '',
           progress: this.coding,
-          deadline: this.mostRecentCodingLog.deadline,
+          deadline: this.lastLog('Coding').deadline,
         },
         {
           type: 'Testes',
-          responsible: this.mostRecentTestingLog.demandLog_developers.map((developer) => developer.name).join(', '),
-          started_at: handleStringDate(this.mostRecentTestingLog.started_at) || '',
-          finished_at: handleStringDate(this.mostRecentTestingLog.finished_at) || '',
+          responsible: this.lastLog('Testing')
+            .demandLog_developers.map((developer) => developer.name)
+            .join(', '),
+          started_at: handleStringDate(this.lastLog('Testing').started_at) || '',
+          finished_at: handleStringDate(this.lastLog('Testing').finished_at) || '',
           progress: this.testing,
-          deadline: this.mostRecentTestingLog.deadline,
+          deadline: this.lastLog('Testing').deadline,
         },
         {
           type: 'Modelagem',
-          responsible: this.mostRecentModelingLog.demandLog_developers.map((developer) => developer.name).join(', '),
-          started_at: handleStringDate(this.mostRecentModelingLog.started_at) || '',
-          finished_at: handleStringDate(this.mostRecentModelingLog.finished_at) || '',
+          responsible: this.lastLog('Modeling')
+            .demandLog_developers.map((developer) => developer.name)
+            .join(', '),
+          started_at: handleStringDate(this.lastLog('Modeling').started_at) || '',
+          finished_at: handleStringDate(this.lastLog('Modeling').finished_at) || '',
           progress: this.modeling,
-          deadline: this.mostRecentModelingLog.deadline,
+          deadline: this.lastLog('Modeling').deadline,
         },
         {
           type: 'UALAB',
-          responsible: this.mostRecentUalabLog.demandLog_developers.map((developer) => developer.name).join(', '),
-          started_at: handleStringDate(this.mostRecentUalabLog.started_at),
-          finished_at: handleStringDate(this.mostRecentUalabLog.finished_at),
+          responsible: this.lastLog('Ualab')
+            .demandLog_developers.map((developer) => developer.name)
+            .join(', '),
+          started_at: handleStringDate(this.lastLog('Ualab').started_at),
+          finished_at: handleStringDate(this.lastLog('Ualab').finished_at),
           progress: this.ualab,
-          deadline: this.mostRecentUalabLog.deadline,
+          deadline: this.lastLog('Ualab').deadline,
         },
       ],
     };
   }
 
-  toUpdate(): DemandUpdateForm {
+  public toUpdate(): DemandUpdateForm {
     return {
       id: this.id,
       status: this.status,
       experiment_id: this.demand.experiments.id,
       institution_id: this.demand.institutions.id,
       logger_id: 0,
-      scripting_developers: this.mostRecentScriptingLog.demandLog_developers.map((developer) => ({
-        value: developer.id,
-        label: developer.name,
-      })),
-      coding_developers: this.mostRecentCodingLog.demandLog_developers.map((developer) => ({
-        value: developer.id,
-        label: developer.name,
-      })),
-      testing_developers: this.mostRecentTestingLog.demandLog_developers.map((developer) => ({
-        value: developer.id,
-        label: developer.name,
-      })),
-      modeling_developers: this.mostRecentModelingLog.demandLog_developers.map((developer) => ({
-        value: developer.id,
-        label: developer.name,
-      })),
-      ualab_developers: this.mostRecentUalabLog.demandLog_developers.map((developer) => ({
-        value: developer.id,
-        label: developer.name,
-      })),
+      scripting_developers: this.demandLogDevelopers('Scripting'),
+      coding_developers: this.demandLogDevelopers('Coding'),
+      testing_developers: this.demandLogDevelopers('Testing'),
+      modeling_developers: this.demandLogDevelopers('Modeling'),
+      ualab_developers: this.demandLogDevelopers('Ualab'),
       scripting: this.scripting,
       coding: this.coding,
       testing: this.testing,
       modeling: this.modeling,
       ualab: this.ualab,
-      ualab_finishedAt: new Date(this.mostRecentUalabLog.finished_at || ''),
-      coding_finishedAt: new Date(this.mostRecentCodingLog.finished_at || ''),
-      scripting_finishedAt: new Date(this.mostRecentScriptingLog.finished_at || ''),
-      testing_finishedAt: new Date(this.mostRecentTestingLog.finished_at || ''),
-      modeling_finishedAt: new Date(this.mostRecentModelingLog.finished_at || ''),
+      ualab_finishedAt: this.handleLogDates('Ualab').finishedAt,
+      ualab_startedAt: this.handleLogDates('Ualab').startedAt,
+      coding_finishedAt: this.handleLogDates('Coding').finishedAt,
+      coding_startedAt: this.handleLogDates('Coding').startedAt,
+      scripting_finishedAt: this.handleLogDates('Scripting').finishedAt,
+      scripting_startedAt: this.handleLogDates('Scripting').startedAt,
+      testing_finishedAt: this.handleLogDates('Testing').finishedAt,
+      testing_startedAt: this.handleLogDates('Testing').startedAt,
+      modeling_finishedAt: this.handleLogDates('Modeling').finishedAt,
+      modeling_startedAt: this.handleLogDates('Modeling').startedAt,
+      coding_deadline: this.lastLog('Coding').deadline,
+      modeling_deadline: this.lastLog('Modeling').deadline,
+      scripting_deadline: this.lastLog('Scripting').deadline,
+      testing_deadline: this.lastLog('Testing').deadline,
+      ualab_deadline: this.lastLog('Ualab').deadline,
+      coding_percent: this.getPercent('Coding'),
+      modeling_percent: this.getPercent('Modeling'),
+      scripting_percent: this.getPercent('Scripting'),
+      testing_percent: this.getPercent('Testing'),
+      ualab_percent: this.getPercent('Ualab'),
     };
   }
 
-  toDemand(): Demand {
+  public toDemand(): IDemand {
     return this.demand;
   }
 

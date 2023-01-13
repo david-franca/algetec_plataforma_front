@@ -4,7 +4,7 @@ import { CSVLink } from 'react-csv';
 
 import { DashboardComponent, Stack } from '../../components';
 import { DropdownMenuProps } from '../../components/DropdownMenu';
-import { TableComponent, TableComponentProps } from '../../components/Table';
+import { Captions, TableComponent, TableComponentProps } from '../../components/Table';
 import { useAppDispatch, useAppSelector } from '../../config/hooks';
 import {
   addManyToUsersCart,
@@ -17,6 +17,16 @@ import { useGetUsersQuery } from '../../services/user.service';
 import CreateUserPage from './Create';
 import { EditUser } from './Edit';
 
+type ContentValue = {
+  id: string;
+  name: string;
+  email: string;
+  created_at: string;
+  updated_at: string;
+  role: string;
+  department: string;
+};
+
 export function UsersPage() {
   const { users: usersCart } = useAppSelector((state) => state.cart);
   const { data: usersData, isLoading } = useGetUsersQuery();
@@ -24,31 +34,33 @@ export function UsersPage() {
 
   const dispatch = useAppDispatch();
 
-  const captions = [
-    { caption: '' },
-    { caption: 'ID', tooltip: 'Identificador' },
-    { caption: 'Nome' },
-    { caption: 'Email' },
-    { caption: 'Criação' },
-    { caption: 'Atualização' },
-    { caption: 'Nível de Acesso' },
-    { caption: 'Equipe' },
-  ];
+  const captions = useMemo<Captions[]>(
+    () => [
+      { caption: 'ID', tooltip: 'Identificador', accessor: 'id', sortable: true },
+      { caption: 'Nome', accessor: 'name', sortable: true },
+      { caption: 'Email', accessor: 'email', sortable: true },
+      { caption: 'Criação', accessor: 'created_at', sortable: true },
+      { caption: 'Atualização', accessor: 'updated_at', sortable: true },
+      { caption: 'Nível de Acesso', accessor: 'role', sortable: true },
+      { caption: 'Equipe', accessor: 'department', sortable: true },
+    ],
+    [],
+  );
 
-  const content = useMemo<TableComponentProps['content']>(
+  const content = useMemo<TableComponentProps<ContentValue>['content']>(
     () =>
       usersData
         ? usersData.map((user) => ({
             id: user.id,
-            value: [
-              user.id.toString(),
-              user.name,
-              user.email,
-              handleStringDate(user.created_at),
-              handleStringDate(user.updated_at),
-              user.role.name,
-              user.department.name,
-            ],
+            value: {
+              id: user.id.toString(),
+              name: user.name,
+              email: user.email,
+              created_at: handleStringDate(user.created_at),
+              updated_at: handleStringDate(user.updated_at),
+              role: user.role.name,
+              department: user.department.name,
+            },
             checked: !!usersCart.find((cartUser) => cartUser.id === user.id),
             onCheckedChange: (checked: CheckedState) =>
               checked === true ? dispatch(addToUsersCart(user)) : dispatch(removeFromUsersCart(user)),

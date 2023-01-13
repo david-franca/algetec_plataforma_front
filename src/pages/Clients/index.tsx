@@ -4,7 +4,7 @@ import { CSVLink } from 'react-csv';
 
 import { DashboardComponent, Stack } from '../../components';
 import { DropdownMenuProps } from '../../components/DropdownMenu';
-import { Content, TableComponent } from '../../components/Table';
+import { Captions, TableComponent, TableComponentProps } from '../../components/Table';
 import { useAppDispatch, useAppSelector } from '../../config/hooks';
 import {
   addManyToInstitutionsCart,
@@ -17,35 +17,40 @@ import { useGetInstitutionsQuery } from '../../services/institution.service';
 import { CreateInstitution } from './Create';
 import { EditClient } from './Edit';
 
+interface ContentValue {
+  id: string;
+  name: string;
+  created_at: string;
+  updated_at: string;
+}
+
 export function ClientsPage() {
   const { institutions: institutionsCart } = useAppSelector((state) => state.institution);
   const { data: institutionsData, isLoading } = useGetInstitutionsQuery();
   const [closeDialog, setCloseDialog] = useState(false);
   const dispatch = useAppDispatch();
 
-  const captions = useMemo(
+  const captions = useMemo<Captions[]>(
     () => [
-      { caption: '' },
-      { caption: 'ID', tooltip: 'Identificação' },
-      { caption: 'Nome' },
-      { caption: 'Criado em' },
-      { caption: 'Atualizado em' },
+      { caption: 'ID', tooltip: 'Identificação', accessor: 'id', sortable: true },
+      { caption: 'Nome', accessor: 'name', sortable: true },
+      { caption: 'Criação', accessor: 'created_at', sortable: true },
+      { caption: 'Atualização', accessor: 'updated_at', sortable: true },
     ],
     [],
   );
 
-  const content = useMemo<Content[]>(
+  const content = useMemo<TableComponentProps<ContentValue>['content']>(
     () =>
       institutionsData
         ? institutionsData.map((institution) => ({
             id: institution.id,
-            value: [
-              institution.id.toString(),
-              institution.name,
-              handleStringDate(institution.created_at),
-              handleStringDate(institution.updated_at),
-            ],
-
+            value: {
+              id: institution.id.toString(),
+              name: institution.name,
+              created_at: handleStringDate(institution.created_at),
+              updated_at: handleStringDate(institution.updated_at),
+            },
             checked: !!institutionsCart.find((cartInstitution) => cartInstitution.id === institution.id),
             onCheckedChange: (checked: CheckedState) =>
               checked === true

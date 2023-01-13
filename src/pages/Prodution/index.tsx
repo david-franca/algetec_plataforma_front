@@ -5,7 +5,7 @@ import { useParams } from 'react-router-dom';
 import { Box, Center, DashboardComponent, Flex, Spinner, Text, Title } from '../../components';
 import { Card } from '../../components/Card';
 import { Separator } from '../../components/Separator';
-import { IDemand } from '../../models/demands.model';
+import { Demand } from '../../models/demands.model';
 import { useGetDemandByIdQuery } from '../../services/demands.service';
 
 export function ProductionPage() {
@@ -15,7 +15,7 @@ export function ProductionPage() {
     skip: !id,
   });
 
-  const demand = useMemo(() => (demandData ? new IDemand(demandData).toProduction() : null), [demandData]);
+  const demand = useMemo(() => (demandData ? new Demand(demandData).toProduction() : null), [demandData]);
 
   if (!demand) {
     return (

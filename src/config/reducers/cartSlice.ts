@@ -2,10 +2,10 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
 import { User } from '../../models';
-import { Demand } from '../../models/demands.model';
+import { IDemand } from '../../models/demands.model';
 
 interface CartState {
-  demands: Demand[];
+  demands: IDemand[];
   users: User[];
 }
 
@@ -18,14 +18,14 @@ const cartSlice = createSlice({
   name: 'cart',
   initialState,
   reducers: {
-    addToDemandsCart: (state, action: PayloadAction<Demand>) => {
+    addToDemandsCart: (state, action: PayloadAction<IDemand>) => {
       const itemInCart = state.demands.find((item) => item.id === action.payload.id);
       if (!itemInCart) {
         state.demands.push({ ...action.payload });
       }
     },
 
-    addManyToDemandsCart: (state, action: PayloadAction<Demand[]>) => {
+    addManyToDemandsCart: (state, action: PayloadAction<IDemand[]>) => {
       action.payload.forEach((item) => {
         const itemInCart = state.demands.find((demandsItem) => demandsItem.id === item.id);
         if (!itemInCart) {
@@ -34,7 +34,7 @@ const cartSlice = createSlice({
       });
     },
 
-    removeFromDemandsCart: (state, action: PayloadAction<Demand>) => {
+    removeFromDemandsCart: (state, action: PayloadAction<IDemand>) => {
       const itemIndex = state.demands.findIndex((item) => item.id === action.payload.id);
       if (itemIndex !== -1) {
         state.demands.splice(itemIndex, 1);
