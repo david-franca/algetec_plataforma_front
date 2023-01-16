@@ -248,7 +248,7 @@ export function Dashboard() {
             }}
           >
             <Chart
-              text="Pontos"
+              text="Trabalho Restante (%)"
               series={series}
               categories={['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta']}
               dashArray={[5]}
@@ -265,10 +265,24 @@ export function Dashboard() {
             }}
           >
             <Text css={{ marginLeft: 0 }}>Velocidade Média</Text>
-            <Title>{Math.floor(Math.random() * 100)} pt / dia</Title>
+            <Title>{Math.floor(Math.random() * 100)} %/dia</Title>
+          </Card>
+          <Card
+            css={{
+              gridArea: '1 / 2 / 2 / 3',
+              width: 'auto',
+              height: '100%',
+              alignItems: 'start',
+              justifyContent: 'start',
+            }}
+          >
+            <Text css={{ marginLeft: 0 }}>Velocidade Média</Text>
+            <Title>{Math.floor(Math.random() * 100)} %/dia</Title>
           </Card>
         </Grid>
       </Stack>
     </DashboardComponent>
   );
 }
+// Ideal é 100% dividido pelo número de dias
+// Real é o cálculo de cada demanda

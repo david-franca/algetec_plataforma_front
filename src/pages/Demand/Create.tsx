@@ -9,7 +9,6 @@ import { Button, Center, DashboardComponent, Inline, Title } from '../../compone
 import { Card } from '../../components/Card';
 import { Form } from '../../components/Dashboard/styles';
 import { DatePickerMulti } from '../../components/Datepicker';
-import { Select } from '../../components/Select';
 import { Separator } from '../../components/Separator';
 import { useAppSelector } from '../../config/hooks';
 import { selectCurrentUser } from '../../config/reducers/authSlice';
@@ -230,40 +229,57 @@ export default function CreateDemandPage() {
           >
             <FormContainer>
               <Label htmlFor="status">Status</Label>
-              <Select
-                value={formik.values.status}
-                onValueChange={(value) => {
-                  formik.setFieldValue('status', value);
+              <SelectComponent
+                placeholder="Selecione uma status"
+                isSearchable
+                styles={{
+                  control: (provided) => ({
+                    ...provided,
+                    ...selectComponentsStyles,
+                  }),
+                  container: (provided) => ({
+                    ...provided,
+                    width: '90%',
+                    color: '#5746af',
+                  }),
                 }}
-                items={statusOptions}
+                options={statusOptions}
+                onChange={(value) => {
+                  formik.setFieldValue('status', value?.value);
+                }}
+                value={statusOptions.find((option) => option.value === formik.values.status)}
               />
             </FormContainer>
 
             <FormContainer>
               <Label htmlFor="institution_id">Instituição</Label>
-              <Select
-                disabled={institutionsLoading}
-                value={formik.values.institution_id.toString()}
-                onValueChange={(value) => {
-                  formik.setFieldValue('institution_id', value);
+              <SelectComponent
+                placeholder="Selecione uma Instituição"
+                isSearchable
+                isDisabled={institutionsLoading}
+                styles={{
+                  control: (provided) => ({
+                    ...provided,
+                    ...selectComponentsStyles,
+                  }),
+                  container: (provided) => ({
+                    ...provided,
+                    width: '90%',
+                    color: '#5746af',
+                  }),
                 }}
-                items={institutionOptions}
+                options={institutionOptions}
+                onChange={(value) => {
+                  formik.setFieldValue('institution_id', value?.value);
+                }}
+                value={institutionOptions.find((option) => option.value === formik.values.institution_id.toString())}
               />
             </FormContainer>
 
             <FormContainer>
               <Label htmlFor="experiment_id">Prática</Label>
-              {/* <Select
-                disabled={experimentsLoading}
-                value={formik.values.experiment_id.toString()}
-                onValueChange={(value) => {
-                  formik.setFieldValue('experiment_id', value);
-                }}
-                items={experimentOptions}
-              /> */}
               <SelectComponent
-                placeholder="Selecione uma prática"
-                isClearable
+                placeholder="Selecione uma Prática"
                 isSearchable
                 isDisabled={experimentsLoading}
                 styles={{
@@ -281,6 +297,7 @@ export default function CreateDemandPage() {
                 onChange={(value) => {
                   formik.setFieldValue('experiment_id', value?.value);
                 }}
+                value={experimentOptions.find((option) => option.value === formik.values.experiment_id.toString())}
               />
             </FormContainer>
           </Inline>

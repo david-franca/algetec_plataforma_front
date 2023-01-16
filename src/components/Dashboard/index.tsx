@@ -6,7 +6,6 @@ import { forwardRef, ReactNode } from 'react';
 import { Link, Navigate } from 'react-router-dom';
 
 import logo from '../../assets/logo.png';
-import { CAN } from '../../config/can';
 import { useAppSelector } from '../../config/hooks';
 import { Flex } from '../box';
 import { Footer } from '../Footer';
@@ -47,7 +46,7 @@ const NavigationMenuTrigger = forwardRef<HTMLButtonElement, TriggerProps>(
 NavigationMenuTrigger.displayName = 'Trigger';
 
 export function DashboardComponent({ children, isLoading = false }: DashboardContainerProps) {
-  const { isLoggedIn } = useAppSelector((state) => state.auth);
+  const { isLoggedIn, user } = useAppSelector((state) => state.auth);
 
   if (!isLoggedIn) {
     return <Navigate to="/" replace />;
@@ -74,21 +73,21 @@ export function DashboardComponent({ children, isLoading = false }: DashboardCon
                   <NavigationMenuTrigger icon={<ExternalLinkIcon />}>Catálogo</NavigationMenuTrigger>
                 </StyledAnchor>
               </NavigationMenuItem>
-              {CAN('read', 'Institution') && (
+              {user?.role.admin && (
                 <NavigationMenuItem>
                   <StyledLink to="/dashboard/clients">
                     <NavigationMenuTrigger icon={<BackpackIcon />}>Clientes</NavigationMenuTrigger>
                   </StyledLink>
                 </NavigationMenuItem>
               )}
-              {CAN('read', 'User') && (
+              {user?.role.admin && (
                 <NavigationMenuItem>
                   <StyledLink to="/dashboard/users">
                     <NavigationMenuTrigger icon={<PersonIcon />}>Usuários</NavigationMenuTrigger>
                   </StyledLink>
                 </NavigationMenuItem>
               )}
-              {CAN('read', 'Demand') && (
+              {user?.role.demands && (
                 <NavigationMenuItem>
                   <StyledLink to="/dashboard/issues">
                     <NavigationMenuTrigger icon={<RocketIcon />}>Entregas</NavigationMenuTrigger>

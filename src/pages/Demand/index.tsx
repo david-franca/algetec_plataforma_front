@@ -35,6 +35,8 @@ interface ContentValues {
 
 export function DemandPage() {
   const { demands: demandCart } = useAppSelector((state) => state.cart);
+  const { user } = useAppSelector((state) => state.auth);
+
   const { data: demandsData, isLoading } = useGetDemandsQuery();
 
   const dispatch = useAppDispatch();
@@ -155,9 +157,16 @@ export function DemandPage() {
             link: true,
             subject: 'Demand',
           }}
-          editElement={<EditDemandPage />}
-          editTitle="Editar Entrega"
-          updateLink
+          edit={{
+            element: <EditDemandPage />,
+            title: 'Editar Entrega',
+            link: true,
+          }}
+          permissions={{
+            canEdit: user?.role.demands,
+            canDelete: user?.role.demands_admin,
+            canCreate: user?.role.demands_admin,
+          }}
         />
       </Stack>
     </DashboardComponent>

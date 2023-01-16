@@ -26,6 +26,7 @@ interface ContentValue {
 
 export function ClientsPage() {
   const { institutions: institutionsCart } = useAppSelector((state) => state.institution);
+  const { user } = useAppSelector((state) => state.auth);
   const { data: institutionsData, isLoading } = useGetInstitutionsQuery();
   const [closeDialog, setCloseDialog] = useState(false);
   const dispatch = useAppDispatch();
@@ -127,8 +128,15 @@ export function ClientsPage() {
             element: <CreateInstitution onClose={setCloseDialog} />,
             subject: 'Institution',
           }}
-          editElement={<EditClient id={1} onClose={setCloseDialog} />}
-          editTitle="Editar Instituição"
+          edit={{
+            element: <EditClient id={1} onClose={setCloseDialog} />,
+            title: 'Editar Instituição',
+          }}
+          permissions={{
+            canCreate: user?.role.admin,
+            canEdit: user?.role.admin,
+            canDelete: user?.role.admin,
+          }}
         />
       </Stack>
     </DashboardComponent>

@@ -109,7 +109,7 @@ type DemandProduction = {
   }>;
 };
 
-interface SelectOption {
+export interface SelectOption {
   value: number;
   label: string;
 }

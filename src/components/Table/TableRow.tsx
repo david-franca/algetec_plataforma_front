@@ -21,6 +21,10 @@ interface TableRowProps<T> {
   editTitle: string;
   updateLink?: boolean;
   captions: Array<Captions>;
+  permissions?: {
+    canEdit?: boolean;
+    canDelete?: boolean;
+  };
 }
 
 export function TableRow<K>({
@@ -32,6 +36,7 @@ export function TableRow<K>({
   editTitle,
   updateLink,
   captions,
+  permissions,
 }: TableRowProps<K>) {
   const { pathname } = useLocation();
   return (
@@ -79,28 +84,31 @@ export function TableRow<K>({
       ))} */}
       <Td>
         <Inline css={{ gap: '$sm' }}>
-          {updateLink ? (
-            <Tooltip label="Editar">
-              <Button color="cyan">
-                <StyledLink to={`${pathname}/edit/${id}`}>
-                  <Pencil1Icon />
-                </StyledLink>
-              </Button>
-            </Tooltip>
-          ) : (
-            <Dialog element={cloneElement(editElement, { id })} title={editTitle}>
-              <Button color="cyan">
-                <Tooltip label="Editar">
-                  <Pencil1Icon />
-                </Tooltip>
-              </Button>
-            </Dialog>
+          {permissions?.canEdit &&
+            (updateLink ? (
+              <Tooltip label="Editar">
+                <Button color="cyan">
+                  <StyledLink to={`${pathname}/edit/${id}`}>
+                    <Pencil1Icon />
+                  </StyledLink>
+                </Button>
+              </Tooltip>
+            ) : (
+              <Dialog element={cloneElement(editElement, { id })} title={editTitle}>
+                <Button color="cyan">
+                  <Tooltip label="Editar">
+                    <Pencil1Icon />
+                  </Tooltip>
+                </Button>
+              </Dialog>
+            ))}
+          {permissions?.canDelete && (
+            <Button color="red">
+              <Tooltip label="Deletar">
+                <TrashIcon />
+              </Tooltip>
+            </Button>
           )}
-          <Button color="red">
-            <Tooltip label="Deletar">
-              <TrashIcon />
-            </Tooltip>
-          </Button>
         </Inline>
       </Td>
     </Tr>
@@ -109,4 +117,8 @@ export function TableRow<K>({
 
 TableRow.defaultProps = {
   updateLink: false,
+  permissions: {
+    canEdit: false,
+    canDelete: false,
+  },
 };

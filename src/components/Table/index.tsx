@@ -3,8 +3,8 @@ import { PlusIcon } from '@radix-ui/react-icons';
 import { nanoid } from '@reduxjs/toolkit';
 import { ReactNode, useState } from 'react';
 import { useLocation } from 'react-router-dom';
-import { CAN, Subjects } from '../../config/can';
 
+import { Subjects } from '../../config/can';
 import { styled } from '../../config/styles/stitches.config';
 import { Box, Center, Flex } from '../box';
 import { Button } from '../button';
@@ -89,13 +89,20 @@ export interface TableComponentProps<T> {
   content: Content<T>[];
   menu?: DropdownMenuProps[];
   closeDialog: boolean;
-  editElement: JSX.Element;
-  editTitle: string;
-  updateLink?: boolean;
   create: {
     element: ReactNode;
     link?: boolean;
     subject: Subjects;
+  };
+  edit: {
+    element: JSX.Element;
+    link?: boolean;
+    title: string;
+  };
+  permissions?: {
+    canEdit?: boolean;
+    canDelete?: boolean;
+    canCreate?: boolean;
   };
 }
 
@@ -105,10 +112,9 @@ export function TableComponent<T>({
   captions,
   menu,
   closeDialog,
-  editElement,
-  editTitle,
-  updateLink,
+  edit,
   create,
+  permissions,
 }: TableComponentProps<T>) {
   const { pathname } = useLocation();
   const [tableData, setTableData] = useState(content);
@@ -153,7 +159,7 @@ export function TableComponent<T>({
           }}
         >
           {create.link ? (
-            CAN('create', create.subject) && (
+            permissions?.canCreate && (
               <Tooltip label="Adicionar">
                 <StyledLink to={`${pathname}/create`}>
                   <Button color="grass">
@@ -191,9 +197,10 @@ export function TableComponent<T>({
           <TableBody
             captions={captions}
             content={tableData}
-            editElement={editElement}
-            editTitle={editTitle}
-            updateLink={updateLink}
+            editElement={edit.element}
+            editTitle={edit.title}
+            updateLink={edit.link}
+            permissions={permissions}
           />
         </Table>
       </ScrollArea>
@@ -203,5 +210,9 @@ export function TableComponent<T>({
 
 TableComponent.defaultProps = {
   menu: [],
-  updateLink: false,
+  permissions: {
+    canEdit: false,
+    canDelete: false,
+    canCreate: false,
+  },
 };

@@ -29,6 +29,7 @@ type ContentValue = {
 
 export function UsersPage() {
   const { users: usersCart } = useAppSelector((state) => state.cart);
+  const { user: userAuth } = useAppSelector((state) => state.auth);
   const { data: usersData, isLoading } = useGetUsersQuery();
   const [closeDialog, setCloseDialog] = useState(false);
 
@@ -145,8 +146,15 @@ export function UsersPage() {
             element: <CreateUserPage onClose={setCloseDialog} />,
             subject: 'User',
           }}
-          editElement={<EditUser onClose={setCloseDialog} id={1} />}
-          editTitle="Editar Usuário"
+          edit={{
+            element: <EditUser onClose={setCloseDialog} id={1} />,
+            title: 'Editar Usuário',
+          }}
+          permissions={{
+            canEdit: userAuth?.role.admin,
+            canCreate: userAuth?.role.admin,
+            canDelete: userAuth?.role.admin,
+          }}
         />
       </Stack>
     </DashboardComponent>

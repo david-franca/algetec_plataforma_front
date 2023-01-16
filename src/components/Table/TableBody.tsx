@@ -10,6 +10,10 @@ interface TableBodyProps<T> {
   editElement: JSX.Element;
   editTitle: string;
   updateLink?: boolean;
+  permissions?: {
+    canEdit?: boolean;
+    canDelete?: boolean;
+  };
 }
 
 export function TableBody<T>({
@@ -18,6 +22,7 @@ export function TableBody<T>({
   editElement,
   editTitle,
   updateLink,
+  permissions,
 }: TableBodyProps<TableComponentProps<T>['content']>) {
   return (
     <Tbody>
@@ -32,6 +37,7 @@ export function TableBody<T>({
           editElement={editElement}
           editTitle={editTitle}
           updateLink={updateLink}
+          permissions={permissions}
         />
       ))}
     </Tbody>
@@ -40,4 +46,8 @@ export function TableBody<T>({
 
 TableBody.defaultProps = {
   updateLink: false,
+  permissions: {
+    canEdit: false,
+    canDelete: false,
+  },
 };

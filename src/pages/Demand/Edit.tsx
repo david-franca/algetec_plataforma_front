@@ -10,7 +10,6 @@ import { Button, Center, DashboardComponent, Inline, Title } from '../../compone
 import { Card } from '../../components/Card';
 import { DatePicker } from '../../components/Datepicker';
 import { Form } from '../../components/Form';
-import { Select } from '../../components/Select';
 import { Separator } from '../../components/Separator';
 import { useAppSelector } from '../../config/hooks';
 import { selectCurrentUser } from '../../config/reducers/authSlice';
@@ -20,6 +19,11 @@ import { useGetDemandByIdQuery, useGetExperimentsQuery, useUpdateDemandMutation 
 import { useGetInstitutionsQuery } from '../../services/institution.service';
 import { useGetUsersQuery } from '../../services/user.service';
 import { FormContainer, Input, Label } from '../Dashboard/styles';
+
+type SelectOption = {
+  label: string;
+  value: string;
+};
 
 type ILabel = keyof Pick<
   DemandUpdateForm,
@@ -71,9 +75,14 @@ export function EditDemandPage() {
   const { data: demandData, isLoading } = useGetDemandByIdQuery(id, {
     skip: id === 0,
   });
-  const { data: institutions, isLoading: institutionsLoading } = useGetInstitutionsQuery();
+
+  const { data: institutions, isLoading: institutionsLoading } = useGetInstitutionsQuery(undefined, {
+    skip: !currentUser?.role.admin,
+  });
   const { data: experiments, isLoading: experimentsLoading } = useGetExperimentsQuery();
-  const { data: usersData, isLoading: usersLoading } = useGetUsersQuery();
+  const { data: usersData, isLoading: usersLoading } = useGetUsersQuery(undefined, {
+    skip: !currentUser?.role.admin,
+  });
 
   const [updateDemand, { isLoading: updateDemandLoading, isSuccess: updateDemandSuccess, isError: updateDemandError }] =
     useUpdateDemandMutation();
@@ -122,7 +131,7 @@ export function EditDemandPage() {
       updateDemand(post);
     },
   });
-  const statusOptions = useMemo(
+  const statusOptions = useMemo<SelectOption[]>(
     () => [
       { value: DemandStatus.DEVELOPMENT, label: 'Desenvolvimento' },
       { value: DemandStatus.CORRECTION, label: 'Correção' },
@@ -132,7 +141,7 @@ export function EditDemandPage() {
     ],
     [DemandStatus],
   );
-  const institutionOptions = useMemo(
+  const institutionOptions = useMemo<SelectOption[]>(
     () =>
       institutions
         ? [
@@ -145,16 +154,13 @@ export function EditDemandPage() {
         : [],
     [institutions],
   );
-  const experimentOptions = useMemo(
+  const experimentOptions = useMemo<SelectOption[]>(
     () =>
       experiments
-        ? [
-            { value: '0', label: 'Selecione uma prática' },
-            ...experiments.map((experiment) => ({
-              value: experiment.id.toString(),
-              label: `${experiment.id} - ${experiment.name}`,
-            })),
-          ]
+        ? experiments.map((experiment) => ({
+            value: experiment.id.toString(),
+            label: `${experiment.id} - ${experiment.name}`,
+          }))
         : [],
     [experiments],
   );
@@ -278,10 +284,11 @@ export function EditDemandPage() {
           gap: '$md',
         }}
       >
-        <Title size="extraLarge">Editar Demanda</Title>
+        <Title size="extraLarge">Editar Entrega</Title>
         <Card
           css={{
             width: '100%',
+            display: currentUser?.role.admin ? 'flex' : 'none',
           }}
         >
           <Title size="large">Informações da demanda</Title>
@@ -295,36 +302,75 @@ export function EditDemandPage() {
           >
             <FormContainer>
               <Label htmlFor="status">Status</Label>
-              <Select
-                value={formik.values.status}
-                onValueChange={(value) => {
-                  formik.setFieldValue('status', value);
+              <SelectComponent
+                placeholder="Selecione uma status"
+                isSearchable
+                styles={{
+                  control: (provided) => ({
+                    ...provided,
+                    ...selectComponentsStyles,
+                  }),
+                  container: (provided) => ({
+                    ...provided,
+                    width: '90%',
+                    color: '#5746af',
+                  }),
                 }}
-                items={statusOptions}
+                options={statusOptions}
+                onChange={(value) => {
+                  formik.setFieldValue('status', value?.value);
+                }}
+                value={statusOptions.find((option) => option.value === formik.values.status)}
               />
             </FormContainer>
 
             <FormContainer>
               <Label htmlFor="institution_id">Instituição</Label>
-              <Select
-                disabled={institutionsLoading}
-                value={formik.values.institution_id.toString()}
-                onValueChange={(value) => {
-                  formik.setFieldValue('institution_id', value);
+              <SelectComponent
+                placeholder="Selecione uma Instituição"
+                isSearchable
+                isDisabled={institutionsLoading}
+                styles={{
+                  control: (provided) => ({
+                    ...provided,
+                    ...selectComponentsStyles,
+                  }),
+                  container: (provided) => ({
+                    ...provided,
+                    width: '90%',
+                    color: '#5746af',
+                  }),
                 }}
-                items={institutionOptions}
+                options={institutionOptions}
+                onChange={(value) => {
+                  formik.setFieldValue('institution_id', value?.value);
+                }}
+                value={institutionOptions.find((option) => option.value === formik.values.institution_id.toString())}
               />
             </FormContainer>
 
             <FormContainer>
               <Label htmlFor="experiment_id">Prática</Label>
-              <Select
-                disabled={experimentsLoading}
-                value={formik.values.experiment_id.toString()}
-                onValueChange={(value) => {
-                  formik.setFieldValue('experiment_id', value);
+              <SelectComponent
+                placeholder="Selecione uma Prática"
+                isSearchable
+                isDisabled={experimentsLoading}
+                styles={{
+                  control: (provided) => ({
+                    ...provided,
+                    ...selectComponentsStyles,
+                  }),
+                  container: (provided) => ({
+                    ...provided,
+                    width: '90%',
+                    color: '#5746af',
+                  }),
                 }}
-                items={experimentOptions}
+                options={experimentOptions}
+                onChange={(value) => {
+                  formik.setFieldValue('experiment_id', value?.value);
+                }}
+                value={experimentOptions.find((option) => option.value === formik.values.experiment_id.toString())}
               />
             </FormContainer>
           </Inline>
@@ -352,7 +398,7 @@ export function EditDemandPage() {
                   isMulti
                   isClearable
                   isSearchable
-                  isDisabled={options.loading}
+                  isDisabled={options.loading || !currentUser?.role.admin}
                   styles={{
                     control: (provided) => ({
                       ...provided,
@@ -417,6 +463,7 @@ export function EditDemandPage() {
               <FormContainer>
                 <Label htmlFor={options.finishedAt}>Data de conclusão</Label>
                 <DatePicker
+                  disabled={!currentUser?.role.admin}
                   id={options.finishedAt}
                   minDate={formik.values[options.startedAt]}
                   dateTime={formik.values[options.finishedAt]}
