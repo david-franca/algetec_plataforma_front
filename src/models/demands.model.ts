@@ -114,6 +114,12 @@ export interface SelectOption {
   label: string;
 }
 
+export interface IDemandDashboard {
+  date: string;
+  ideal: number;
+  real: number | null;
+}
+
 export interface DemandUpdateForm {
   id: number;
   institution_id: number;
@@ -152,7 +158,7 @@ export interface DemandUpdateForm {
   ualab_percent: number;
 }
 
-type TeamLog = 'Coding' | 'Testing' | 'Scripting' | 'Modeling' | 'Ualab';
+export type TeamLog = 'Coding' | 'Testing' | 'Scripting' | 'Modeling' | 'Ualab';
 
 export class Demand {
   // eslint-disable-next-line no-useless-constructor
@@ -190,6 +196,19 @@ export class Demand {
     return this.demand.ualab;
   }
 
+  private logsByTeam(team: TeamLog): DemandLog[] {
+    return this.demand.demandLogs
+      .filter((demandLog) => demandLog.type === team)
+      .sort((a, b) => {
+        const dateA = new Date(a.started_at).getTime();
+        const dateB = new Date(b.started_at).getTime();
+
+        if (dateA > dateB) return 1;
+        if (dateA < dateB) return -1;
+        return 0;
+      });
+  }
+
   private lastLog(team: TeamLog): DemandLog {
     return this.demand.demandLogs
       .filter((demandLog) => demandLog.type === team)
@@ -211,12 +230,15 @@ export class Demand {
     }));
   }
 
-  getDates(team: TeamLog): Date[] {
+  getDates(team: TeamLog, allDays?: boolean): Date[] {
     const { startedAt, finishedAt } = this.handleLogDates(team);
     const dates = [];
 
     for (let i = startedAt; i <= finishedAt; i.setDate(i.getDate() + 1)) {
       if (isBusinessDay(i)) {
+        dates.push(new Date(i));
+      }
+      if (allDays && !isBusinessDay(i)) {
         dates.push(new Date(i));
       }
     }
@@ -248,6 +270,53 @@ export class Demand {
     const teamDates = this.getDates(team);
 
     return Math.round((todayIndex * 100) / teamDates.length);
+  }
+
+  getIdealValues(team: TeamLog) {
+    const first = 100;
+    const dates = this.getDates(team).map((date) => date.toLocaleString('pt-BR', { dateStyle: 'short' }));
+
+    const businessDays = this.lastLog(team).deadline;
+    const pieces = first / (businessDays - 1);
+
+    const idealValues: Array<{ date: string; value: number }> = [];
+
+    dates.forEach((date, index) => {
+      const i = index - 1;
+
+      if (i < 0) {
+        idealValues.push({
+          date,
+          value: first,
+        });
+      } else {
+        idealValues.push({
+          date,
+          value: Math.round(pieces * (businessDays - 2) - pieces * i),
+        });
+      }
+    });
+
+    return idealValues;
+  }
+
+  getRealValues(team: TeamLog) {
+    // Preciso de todos os dias que o time trabalhou e o percentual de cada dia
+    // até o dia que o time terminou ou até o dia de hoje
+    const logs = this.logsByTeam(team)
+      .map((log) => ({
+        date: new Date(log.created_at).toLocaleString('pt-BR', { dateStyle: 'short' }),
+        value: log.progress,
+      }))
+      .reverse();
+
+    const logsFiltered = logs.filter((log, index, self) => {
+      const first = self.findIndex((l) => l.date === log.date);
+
+      return first === index;
+    });
+
+    return logsFiltered;
   }
 
   public toProduction(): DemandProduction {
@@ -376,5 +445,45 @@ export class Demand {
       testing_progress: values.testing,
       ualab_progress: values.ualab,
     };
+  }
+
+  public toDashboard(team: TeamLog): IDemandDashboard[] {
+    const allDates = this.getDates(team, true).map((date) => date.toLocaleString('pt-BR', { dateStyle: 'short' }));
+
+    const ideal = this.getIdealValues(team);
+    const real = this.getRealValues(team);
+    let valueForIdeal = 100;
+    let valueForReal: number | null = 100;
+
+    const dashboard = allDates.map((date) => {
+      const idealDate = ideal.find((item) => item.date === date);
+      const realDate = real.find((item) => item.date === date);
+
+      if (idealDate) {
+        valueForIdeal = idealDate.value;
+      }
+
+      if (realDate) {
+        valueForReal = 100 - realDate.value;
+      }
+
+      if (idealDate && realDate) {
+        valueForIdeal = idealDate.value;
+        valueForReal = null;
+
+        return {
+          date,
+          ideal: idealDate.value,
+          real: 100 - realDate.value,
+        };
+      }
+
+      return {
+        date,
+        ideal: valueForIdeal,
+        real: valueForReal,
+      };
+    });
+    return dashboard;
   }
 }

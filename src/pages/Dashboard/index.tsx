@@ -2,10 +2,10 @@ import { useEffect, useMemo, useState } from 'react';
 
 import { DashboardComponent, Flex, Grid, Inline, Stack, Title } from '../../components';
 import { Card } from '../../components/Card';
-import { Chart } from '../../components/Chart';
+import { LineChart } from '../../components/Chart';
 import { Select } from '../../components/Select';
 import { User } from '../../models';
-import { IDemand } from '../../models/demands.model';
+import { Demand, IDemand, TeamLog } from '../../models/demands.model';
 import { useGetDemandsQuery } from '../../services/demands.service';
 import { useGetUsersQuery } from '../../services/user.service';
 import { Text } from './styles';
@@ -28,6 +28,8 @@ export function Dashboard() {
 
   const [select1, setSelect1] = useState<string | undefined>(undefined);
   const [select2, setSelect2] = useState<string | undefined>(undefined);
+
+  const [categories, setCategories] = useState<string[]>([]);
 
   const selectItems: SelectOption[] = useMemo(
     () => [
@@ -55,23 +57,23 @@ export function Dashboard() {
       },
       {
         label: 'Roteirização',
-        value: 'Roteirização',
+        value: 'Scripting',
       },
       {
         label: 'Modelos',
-        value: 'Modelos',
+        value: 'Modeling',
       },
       {
         label: 'Programação',
-        value: 'Programação',
+        value: 'Coding',
       },
       {
         label: 'Testes',
-        value: 'Testes',
+        value: 'Testing',
       },
       {
         label: 'UALAB',
-        value: 'UALAB',
+        value: 'Ualab',
       },
     ],
     [],
@@ -89,11 +91,11 @@ export function Dashboard() {
       seriesRaw.push(
         {
           name: 'Ideal',
-          data: [100, 80, 60, 40, 20],
+          data: [],
         },
         ...issues.map((issue) => ({
           name: issue.experiments.name,
-          data: generateNumberArray(5),
+          data: [],
         })),
       );
     }
@@ -115,11 +117,11 @@ export function Dashboard() {
       seriesRaw.push(
         {
           name: 'Ideal',
-          data: [100, 80, 60, 40, 20],
+          data: [],
         },
         ...teamsItems.slice(1).map((team) => ({
           name: team.label,
-          data: generateNumberArray(5),
+          data: [],
         })),
       );
     }
@@ -134,8 +136,30 @@ export function Dashboard() {
         ...filteredSeries,
       );
     }
+    if (select === 'issues' && select1 !== 'all' && select2 !== 'all') {
+      const filteredIssue = issues.find((issue) => issue.experiments.id === Number(select1));
+
+      if (!filteredIssue) return seriesRaw;
+
+      const demand = new Demand(filteredIssue);
+      const dashboard = demand.toDashboard(select2 as TeamLog);
+      const idealDates = dashboard.map(({ date }) => date);
+
+      setCategories(idealDates);
+      seriesRaw.length = 0;
+      seriesRaw.push(
+        {
+          name: 'Ideal',
+          data: dashboard.map(({ ideal }) => ideal),
+        },
+        {
+          name: 'Real',
+          data: dashboard.map(({ real }) => real),
+        },
+      );
+    }
     return seriesRaw;
-  }, [select, select1, issues, users, teamsItems]);
+  }, [select, select1, select2, issues, users, teamsItems]);
 
   useEffect(() => {
     if (demandsData) {
@@ -157,8 +181,8 @@ export function Dashboard() {
           value: 'all',
         },
         ...issues.map((issue) => ({
-          label: issue.experiments.name,
-          value: issue.experiments.name,
+          label: `${issue.experiments.id} - ${issue.experiments.name}`,
+          value: issue.experiments.id.toString(),
         })),
       ]);
       setItems2(teamsItems);
@@ -214,6 +238,10 @@ export function Dashboard() {
     }
   }, [select, issues, users, teamsItems]);
 
+  useEffect(() => {
+    //
+  }, []);
+
   return (
     <DashboardComponent>
       <Stack
@@ -233,7 +261,8 @@ export function Dashboard() {
         </Inline>
         <Grid
           css={{
-            gridTemplateColumns: '4fr, 1fr',
+            gridTemplateColumns: 'repeat(5, 1fr)',
+            gridTemplateRows: 'repeat(4, 1fr)',
             gap: '$md',
             width: '100%',
             height: '100%',
@@ -242,34 +271,29 @@ export function Dashboard() {
         >
           <Card
             css={{
-              gridArea: '1 / 1 / 2 / 2',
+              gridArea: '1 / 1 / 5 / 5',
               width: 'auto',
               height: '100%',
             }}
           >
-            <Chart
-              text="Trabalho Restante (%)"
-              series={series}
-              categories={['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta']}
-              dashArray={[5]}
-            />
+            <LineChart text="Trabalho Restante (%)" series={series} categories={categories} />
           </Card>
 
           <Card
             css={{
-              gridArea: '1 / 2 / 2 / 3',
+              gridArea: '1 / 5 / 3 / 6',
               width: 'auto',
               height: '100%',
               alignItems: 'start',
               justifyContent: 'start',
             }}
           >
-            <Text css={{ marginLeft: 0 }}>Velocidade Média</Text>
+            <Text css={{ marginLeft: 0 }}>Velocidade Ideal</Text>
             <Title>{Math.floor(Math.random() * 100)} %/dia</Title>
           </Card>
           <Card
             css={{
-              gridArea: '1 / 2 / 2 / 3',
+              gridArea: '3 / 5 / 5 / 6',
               width: 'auto',
               height: '100%',
               alignItems: 'start',

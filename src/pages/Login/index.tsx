@@ -1,26 +1,28 @@
+import {
+  Button,
+  Card,
+  Center,
+  Flex,
+  FormControl,
+  FormErrorMessage,
+  FormLabel,
+  Input,
+  useToast,
+} from '@chakra-ui/react';
 import { useFormik } from 'formik';
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { toast } from 'react-toastify';
 import { object, string } from 'yup';
-import { Button, Text } from '../../components';
-import { LoginRequest, useLoginMutation } from '../../services/auth.service';
+
 import logoBranca from '../../assets/logo-branca.png';
-import {
-  Container,
-  Flex,
-  FormContainer,
-  FormInput,
-  FormLabel,
-  FormStyled,
-  Image,
-  ImageContainer,
-  Sidebar,
-} from './style';
+import { Text } from '../../components';
+import { LoginRequest, useLoginMutation } from '../../services/auth.service';
+import { FormStyled, Image, ImageContainer, Sidebar, url } from './style';
 
 export function LoginPage() {
   const [login, { isLoading, isSuccess, isError }] = useLoginMutation();
   const navigate = useNavigate();
+  const toast = useToast();
   const initialValues: LoginRequest = {
     email: '',
     password: '',
@@ -38,16 +40,31 @@ export function LoginPage() {
   useEffect(() => {
     if (isSuccess) {
       formik.resetForm();
-      toast.success('Login realizado com sucesso');
+      toast({
+        title: 'Login realizado com sucesso',
+        status: 'success',
+        duration: 3000,
+        isClosable: true,
+        position: 'top',
+      });
       navigate('/dashboard');
     } else if (isError) {
-      toast.error('Erro ao realizar login');
+      toast({
+        title: 'Erro ao realizar login',
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+        position: 'top',
+      });
     }
   }, [isSuccess, isError]);
 
   return (
-    <Container>
-      <Flex>
+    <Center
+      height="calc(100vh)"
+      backgroundImage={`linear-gradient(180deg, rgba(187, 36, 62, 0.2) 0%, rgba(255,255,255, 1) 100% ), url("${url}")`}
+    >
+      <Card direction="row" variant="elevated">
         <Sidebar>
           <ImageContainer>
             <Image src={logoBranca} alt="Logo Branca" />
@@ -58,31 +75,39 @@ export function LoginPage() {
         </Sidebar>
 
         <FormStyled noValidate onSubmit={formik.handleSubmit}>
-          <FormContainer>
-            <FormLabel htmlFor="email">Email</FormLabel>
-            <FormInput
-              placeholder="Digite seu email"
-              id="email"
-              name="email"
+          <FormControl isRequired mb="8">
+            <FormLabel fontWeight={400} lineHeight={1.5} textTransform="uppercase" fontSize="sm">
+              Email
+            </FormLabel>
+            <Input
+              variant="flushed"
               type="email"
+              id="email"
               value={formik.values.email}
               onChange={formik.handleChange}
               onBlur={formik.handleBlur}
-              required
+              isInvalid={formik.touched.email && !!formik.errors.email}
+              opacity="0.5"
             />
-          </FormContainer>
-          <FormContainer>
-            <FormLabel htmlFor="password">Senha</FormLabel>
-            <FormInput
-              id="password"
-              name="password"
+            <FormErrorMessage>{formik.touched.email && formik.errors.email}</FormErrorMessage>
+          </FormControl>
+          <FormControl isRequired mb="8">
+            <FormLabel fontWeight={400} lineHeight={1.5} textTransform="uppercase" fontSize="sm">
+              Senha
+            </FormLabel>
+            <Input
+              variant="flushed"
               type="password"
+              id="password"
               value={formik.values.password}
               onChange={formik.handleChange}
               onBlur={formik.handleBlur}
-              required
+              isInvalid={formik.touched.password && !!formik.errors.password}
+              opacity="0.5"
             />
-          </FormContainer>
+            <FormErrorMessage>{formik.touched.password && formik.errors.password}</FormErrorMessage>
+          </FormControl>
+
           {/* <Helpers>
             <Text color="black" size="normal">
               Esqueceu sua senha?
@@ -96,7 +121,7 @@ export function LoginPage() {
               margin: '$sm',
             }}
           >
-            <Button color="cyan" type="submit" isLoading={isLoading}>
+            <Button colorScheme="teal" type="submit" isLoading={isLoading}>
               Login
             </Button>
           </Flex>
@@ -107,7 +132,7 @@ export function LoginPage() {
             </Text>
           </Helpers> */}
         </FormStyled>
-      </Flex>
-    </Container>
+      </Card>
+    </Center>
   );
 }
