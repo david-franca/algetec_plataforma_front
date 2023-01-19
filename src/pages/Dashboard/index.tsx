@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 
 import { DashboardComponent, Flex, Grid, Inline, Stack, Title } from '../../components';
 import { Card } from '../../components/Card';
-import { LineChart } from '../../components/Chart';
+import { LineChart, RadialChart } from '../../components/Chart';
 import { Select } from '../../components/Select';
 import { User } from '../../models';
 import { Demand, IDemand, TeamLog } from '../../models/demands.model';
@@ -29,9 +29,12 @@ export function Dashboard() {
   const [select1, setSelect1] = useState<string | undefined>(undefined);
   const [select2, setSelect2] = useState<string | undefined>(undefined);
 
+  const [realMedia, setRealMedia] = useState(0);
+  const [idealMedia, setIdealMedia] = useState(0);
+
   const [categories, setCategories] = useState<string[]>([]);
 
-  const selectItems: SelectOption[] = useMemo(
+  const selectItems = useMemo(
     () => [
       {
         label: 'Entregas',
@@ -40,10 +43,12 @@ export function Dashboard() {
       {
         label: 'Usuários',
         value: 'users',
+        disabled: true,
       },
       {
         label: 'Equipes',
         value: 'teams',
+        disabled: true,
       },
     ],
     [],
@@ -144,7 +149,15 @@ export function Dashboard() {
       const demand = new Demand(filteredIssue);
       const dashboard = demand.toDashboard(select2 as TeamLog);
       const idealDates = dashboard.map(({ date }) => date);
+      const realValues = dashboard.map(({ real }) => real).filter((value): value is number => !!value);
+      const idealValues = dashboard.map(({ ideal }) => ideal).filter((value): value is number => !!value);
 
+      const realPoints = (100 * realValues.length - realValues.reduce((a, b) => a + b, 0)) / (realValues.length - 1);
+      const idealPoints =
+        (100 * idealValues.length - idealValues.reduce((a, b) => a + b, 0)) / (idealValues.length - 1);
+
+      setRealMedia(realPoints);
+      setIdealMedia(idealPoints);
       setCategories(idealDates);
       seriesRaw.length = 0;
       seriesRaw.push(
@@ -259,51 +272,70 @@ export function Dashboard() {
           <Select items={items1} value={select1} onValueChange={setSelect1} />
           {select1 !== 'none' && <Select items={items2} value={select2} onValueChange={setSelect2} />}
         </Inline>
-        <Grid
-          css={{
-            gridTemplateColumns: 'repeat(5, 1fr)',
-            gridTemplateRows: 'repeat(4, 1fr)',
-            gap: '$md',
-            width: '100%',
-            height: '100%',
-            alignItems: 'center',
-          }}
-        >
-          <Card
+        {select === 'issues' && select1 !== 'all' && select2 === 'all' ? (
+          <Flex
             css={{
-              gridArea: '1 / 1 / 5 / 5',
-              width: 'auto',
-              height: '100%',
+              width: '100%',
+              justifyContent: 'flex-start',
+              alignItems: 'center',
             }}
           >
-            <LineChart text="Trabalho Restante (%)" series={series} categories={categories} />
-          </Card>
+            <Card
+              css={{
+                width: 'auto',
+                height: '100%',
+              }}
+            >
+              <RadialChart />
+            </Card>
+          </Flex>
+        ) : (
+          <Grid
+            css={{
+              gridTemplateColumns: 'repeat(5, 1fr)',
+              gridTemplateRows: 'repeat(4, 1fr)',
+              gap: '$md',
+              width: '100%',
+              height: '100%',
+              alignItems: 'center',
+            }}
+          >
+            <Card
+              css={{
+                gridArea: '1 / 1 / 5 / 5',
+                width: 'auto',
+                height: '100%',
+              }}
+            >
+              <LineChart text="Trabalho Restante (%)" series={series} categories={categories} />
+            </Card>
 
-          <Card
-            css={{
-              gridArea: '1 / 5 / 3 / 6',
-              width: 'auto',
-              height: '100%',
-              alignItems: 'start',
-              justifyContent: 'start',
-            }}
-          >
-            <Text css={{ marginLeft: 0 }}>Velocidade Ideal</Text>
-            <Title>{Math.floor(Math.random() * 100)} %/dia</Title>
-          </Card>
-          <Card
-            css={{
-              gridArea: '3 / 5 / 5 / 6',
-              width: 'auto',
-              height: '100%',
-              alignItems: 'start',
-              justifyContent: 'start',
-            }}
-          >
-            <Text css={{ marginLeft: 0 }}>Velocidade Média</Text>
-            <Title>{Math.floor(Math.random() * 100)} %/dia</Title>
-          </Card>
-        </Grid>
+            <Card
+              css={{
+                gridArea: '1 / 5 / 3 / 6',
+                width: 'auto',
+                height: '100%',
+                alignItems: 'start',
+                justifyContent: 'start',
+              }}
+            >
+              <Text css={{ marginLeft: 0 }}>Velocidade Ideal</Text>
+              <Title>{idealMedia} %/dia</Title>
+            </Card>
+            <Card
+              css={{
+                gridArea: '3 / 5 / 5 / 6',
+                width: 'auto',
+                height: '100%',
+                alignItems: 'start',
+                justifyContent: 'start',
+              }}
+            >
+              <Text css={{ marginLeft: 0 }}>Velocidade Média</Text>
+              <Title>{realMedia} %/dia</Title>
+            </Card>
+          </Grid>
+        )}
       </Stack>
     </DashboardComponent>
   );

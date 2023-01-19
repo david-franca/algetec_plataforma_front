@@ -448,14 +448,15 @@ export class Demand {
   }
 
   public toDashboard(team: TeamLog): IDemandDashboard[] {
-    const allDates = this.getDates(team, true).map((date) => date.toLocaleString('pt-BR', { dateStyle: 'short' }));
+    const allDates = this.getDates(team).map((date) => date.toLocaleString('pt-BR', { dateStyle: 'short' }));
 
     const ideal = this.getIdealValues(team);
     const real = this.getRealValues(team);
     let valueForIdeal = 100;
     let valueForReal: number | null = 100;
+    const datesLength = allDates.length;
 
-    const dashboard = allDates.map((date) => {
+    const dashboard = allDates.map((date, index) => {
       const idealDate = ideal.find((item) => item.date === date);
       const realDate = real.find((item) => item.date === date);
 
@@ -469,12 +470,14 @@ export class Demand {
 
       if (idealDate && realDate) {
         valueForIdeal = idealDate.value;
-        valueForReal = null;
+        valueForReal = 100 - realDate.value;
+      }
 
+      if (index === datesLength - 1) {
         return {
           date,
-          ideal: idealDate.value,
-          real: 100 - realDate.value,
+          ideal: valueForIdeal,
+          real: null,
         };
       }
 
